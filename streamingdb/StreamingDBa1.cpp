@@ -169,6 +169,11 @@ StatusType streaming_database::user_watch(int userId, int movieId)
     userNode->value.viewsLog[movieGenre]++;
     userNode->value.viewsLog[Genre::NONE]++;
 
+    if (userNode->value.group != nullptr) {
+        userNode->value.group->usersViewsLog[movieGenre]++;
+        userNode->value.group->usersViewsLog[Genre::NONE]++;
+    }
+
     return StatusType::SUCCESS;
 }
 
