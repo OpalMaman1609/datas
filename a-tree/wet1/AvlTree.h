@@ -47,7 +47,7 @@ public:
 
     ~AvlTree();
 
-    //AvlTree(AvlTree<Key, Value> &other);
+    AvlTree(const AvlTree<Key, Value>& other);
 
     void DeleteTree(AvlNode<Key, Value> *node);
 
@@ -100,13 +100,14 @@ AvlTree<Key, Value>::~AvlTree() {
         DeleteTree(root);
     }
 }
-/* tell Roee I deleted it
+
+ //tell Roee I deleted it
 template<class Key, class Value>
-AvlTree<Key, Value>::AvlTree(AvlTree<Key, Value> &other) {
+AvlTree<Key, Value>::AvlTree(const AvlTree<Key, Value> &other) {
     root = other.root;
     size = other.size;
 }
-*/
+
 
 template<class Key, class Value>
 void AvlTree<Key, Value>::DeleteTree(AvlNode<Key, Value> *node) {
