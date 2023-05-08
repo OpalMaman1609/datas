@@ -1,6 +1,7 @@
 #include "MovieRank.h"
 
-MovieRank::MovieRank(int movieId, int views): m_movieId(movieId), m_views(views), m_numRanks(0), m_rating(NOT_RATED) {};
+MovieRank::MovieRank(int movieId, int views): m_movieId(movieId), m_views(views), m_rating(NOT_RATED), m_numRates(0) {};
+MovieRank::MovieRank() {};
 
 int MovieRank::getId() {
     return m_movieId;
@@ -15,12 +16,15 @@ int MovieRank::getViews() {
 }
 
 void MovieRank::setRate(int rate) {
-    m_rating = (m_rating * m_numRanks + rate) / (++m_numRates);
+    m_rating = (m_rating * m_numRates + rate) / (m_numRates + 1);
+    m_numRates++;
 }
 
 void MovieRank::incrementViews() {
     m_views++;
 }
+
+// a < b
 
 bool MovieRank::operator<(const MovieRank &other) {
     // rank logic, returns if current rank smaller than other
@@ -38,7 +42,7 @@ bool MovieRank::operator<(const MovieRank &other) {
     }
 
     // rating & views number is equal, will determine by movieId
-    return this->m_movieId < other.m_movieId;
+    return this->m_movieId > other.m_movieId;
 }
 
 bool MovieRank::operator>(const MovieRank &other) {

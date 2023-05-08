@@ -11,6 +11,7 @@ private:
     int m_numRates;
 public:
     MovieRank();
+    MovieRank(int movieId, int views);
     int getId();
     int getViews();
     double getRating();

@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "Pair.h"
-#include "../../streamingdb/utils/wet1util.h"
+#include "../../streamingdb/wet1util.h"
 #include "Score.h"
 
 template<class Key, class Value>

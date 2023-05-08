@@ -1,8 +1,8 @@
 #ifndef DATAS_GROUP_H
 #define DATAS_GROUP_H
 
-#include "../utils/Constans.h"
-#include "../user/User.h"
+#include "Constants.h"
+#include "User.h"
 
 
 class User;

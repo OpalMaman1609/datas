@@ -1,5 +1,5 @@
-#include "../utils/wet1util.h"
-#include "../movierank/MovieRank.h"
+#include "wet1util.h"
+#include "MovieRank.h"
 
 class Movie {
 private:
@@ -7,15 +7,16 @@ private:
     bool m_isVip;
     Genre m_genre;
 public:
+    Movie()=default;
     Movie(int id, int views, bool isVip, Genre genre);
     Movie(const Movie& other);
     virtual ~Movie();
-    int getId();
-    int getViews();
-    double getRate();
-    MovieRank getMovieRank();
-    bool getIsVip();
-    Genre getGenre();
+    int getId() const;
+    int getViews() const;
+    double getRate() const;
+    MovieRank getMovieRank() const;
+    bool getIsVip() const;
+    Genre getGenre() const;
     void watch();
     void rate(int rate);
 };

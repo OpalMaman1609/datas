@@ -1,7 +1,7 @@
 #ifndef USER_H_
 #define USER_H_
-#include "../group/Group.h"
-#include "../utils/Constants.h"
+#include "Group.h"
+#include "Constants.h"
 
 class User {
 private:

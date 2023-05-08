@@ -15,29 +15,33 @@
 #ifndef STREAMINGDBA1_H_
 #define STREAMINGDBA1_H_
 
-#include "utils/wet1util.h"
-#include "utils/avlTree/AvlTree.h"
-#include "utils/pair/Pair.h"
-#include "movie/Movie.h"
-#include "user/User.h"
-#include "group/Group.h"
-#include "utils/Constants.h"
+#include "wet1util.h"
+#include "AvlTree.h"
+#include "Pair.h"
+#include "Movie.h"
+#include "User.h"
+#include "Group.h"
+#include "Constants.h"
 
 class streaming_database {
 private:
     AvlTree<int,User> users;
-    AvlTree<int,Group> groups;
+    AvlTree<int,Group> m_groups;
     AvlTree<int, Movie*>* m_idMovieTree;
 
     // an array of pointers -> pointer to tree for each genre
-    AvlTree<MovieRank, Movie*>* m_genreTreesArray[Genre::NONE + 1];
-    int m_movieCountByGenre[Genre::NONE + 1];
+    AvlTree<MovieRank, Movie*>* m_genreTreesArray[numGenres];
+    int m_movieCountByGenre[numGenres];
 
     // each pair will look like <movie rank, id>
     // size here is one more than needed, for cleaner destructor
-    Pair<MovieRank, int>* m_maxViewsPerGenre[Genre::None + 1];
+    Pair<MovieRank, int>* m_maxViewsPerGenre[numGenres];
 
     void updateTopRatedMoviePerGenre(const Movie& movie);
+
+    void deleteMovieFromGenresTreeArray(Genre genre, const MovieRank& key);
+
+    void insertMovieToGenresTreeArray(Genre genre, Movie& movie);
 	
 public:
 	// <DO-NOT-MODIFY> {

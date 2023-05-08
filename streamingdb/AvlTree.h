@@ -2,9 +2,9 @@
 #define RATUV1_AVLTREE_H
 
 #include <iostream>
-#include "../pair/Pair.h"
+#include "Pair.h"
 #include "wet1util.h"
-#include "Score.h"
+//#include "Score.h"
 
 template<class Key, class Value>
 class AvlNode {
@@ -47,7 +47,7 @@ public:
 
     ~AvlTree();
 
-    AvlTree(AvlTree<Key, Value> &other);
+    AvlTree(const AvlTree<Key, Value> &other);
 
     void DeleteTree(AvlNode<Key, Value> *node);
 
@@ -83,7 +83,7 @@ public:
 
 //    AvlNode<Key, Value> *ArrayToAvlTreeFunc(Pair<Key, Value> arr[], int begin, int end);
 
-//    AvlNode<Key, Value> *Next_InOrder(AvlNode<Key, Value> *node);
+    AvlNode<Key, Value> *Next_InOrder(AvlNode<Key, Value> *node);
 
 //    AvlNode<Key, Value> *Prev_InOrder(AvlNode<Key, Value> *node);
 
@@ -106,7 +106,7 @@ AvlTree<Key, Value>::~AvlTree() {
 }
 
 template<class Key, class Value>
-AvlTree<Key, Value>::AvlTree(AvlTree<Key, Value> &other) {
+AvlTree<Key, Value>::AvlTree(const AvlTree<Key, Value> &other) {
     root = other.root;
     size = other.size;
 }
@@ -497,21 +497,21 @@ AvlNode<Key, Value> *findNode(AvlNode<Key, Value> *rootNode, Key key) {
 //}
 
 // A uniting function to find the next node inorder
-//template<class Key, class Value>
-//AvlNode<Key, Value> *AvlTree<Key, Value>::Next_InOrder(AvlNode<Key, Value> *node) {
-//    if (!node) {
-//        return nullptr;
-//    }
-//    if (node->right_son) {
-//        return findMinNode(node->right_son);
-//    }
-//    AvlNode<Key, Value> *parent = node->parent;
-//    while (parent != nullptr && node == parent->right_son) {
-//        node = parent;
-//        parent = parent->parent;
-//    }
-//    return parent;
-//}
+template<class Key, class Value>
+AvlNode<Key, Value> *AvlTree<Key, Value>::Next_InOrder(AvlNode<Key, Value> *node) {
+    if (!node) {
+        return nullptr;
+    }
+    if (node->right_son) {
+        return findMinNode(node->right_son);
+    }
+    AvlNode<Key, Value> *parent = node->parent;
+    while (parent != nullptr && node == parent->right_son) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
+}
 
 
 //template<class Key, class Value>
@@ -638,17 +638,22 @@ AvlNode<Key, Value> *findNode(AvlNode<Key, Value> *rootNode, Key key) {
 //}
 
 template<class Key, class Value>
-void ReverseInOrderUtil(AvlNode<Key, Value>* root, Key arr[], int* index) {
+void ReverseInOrderUtil(AvlNode<Key, Value>* root, Key arr[], int * index) {
+    if (!root) {
+        return;
+    }
+
     ReverseInOrderUtil(root->right_son, arr, index);
-    arr[index].key = root->key;
-    arr[index].value = root->value;
+    arr[*index] = root->key;
+//    arr[*index].value = root->value;
     *index = *index + 1;
-    ReverseInOrderUtil(root->left, arr, index);
+    ReverseInOrderUtil(root->left_son, arr, index);
 }
 
 template<class Key, class Value>
 void AvlTree<Key, Value>::ReverseInOrder(Key arr[]) {
-    ReverseInOrderUtil(root, arr, 0);
+    int i = 0;
+    ReverseInOrderUtil(root, arr, &i);
 }
 
 //template<class Key, class Value>
