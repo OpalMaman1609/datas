@@ -2,10 +2,14 @@
 #define DATAS_GROUP_H
 
 #include "Constants.h"
-#include "User.h"
+#include "AvlTree.h"
 
 
 class User;
+
+template<class Key, class Value>
+class AvlNode;
+
 
 
 class Group {

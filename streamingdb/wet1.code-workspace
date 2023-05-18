@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "../a-tree/wet1"
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.tcc": "cpp",
+			"algorithm": "cpp",
+			"random": "cpp"
+		}
+	}
+}

@@ -6,8 +6,8 @@ template <class Key, class Value>
 class Pair
 {
 public:
-    Key key;
-    Value value;
+    Key m_key;
+    Value m_value;
     Pair() =default;
     Pair(const Pair<Key, Value> &other)
     {

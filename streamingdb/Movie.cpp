@@ -38,7 +38,7 @@ Movie::Movie(int id, int views, bool isVip, Genre genre): m_isVip(isVip), m_genr
 Movie::Movie(const Movie& other) {
     this->m_isVip = other.m_isVip;
     this->m_genre = other.m_genre;
-    this->m_movieRank = new MovieRank(other.m_movieRank->getId(), other.m_movieRank->getId());
+    this->m_movieRank = new MovieRank(other.m_movieRank->getId(), other.m_movieRank->getViews());
 }
 
 Movie::~Movie() {
