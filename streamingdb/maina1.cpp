@@ -10,6 +10,8 @@
 // .. WILL use our file.
 // 
 
+
+
 #include "StreamingDBa1.h"
 #include <string>
 #include <iostream>
@@ -80,6 +82,7 @@ int main()
             print(op, obj->get_all_movies_count((Genre) g1));
         } else if (!op.compare("get_all_movies")) {
             cin >> g1;
+        
             query_get_all_movies(op, obj, (Genre) g1);
         } else if (!op.compare("user_watch")) {
             cin >> d1 >> d2;
@@ -162,3 +165,34 @@ void query_get_all_movies(string cmd, streaming_database *obj, Genre genre)
     }
     delete[] out_mem;
 }
+
+
+// int main(){
+//    int a = 1;
+//     streaming_database *obj = new streaming_database();
+   
+//     // StatusType status = obj->add_user(123,true);
+//     // StatusType status1 = obj->add_user(1,true);
+//     // StatusType status2 = obj->add_user(2,true);
+//     // StatusType status3 = obj->add_group(2);
+//     // StatusType status7 = obj->add_group(3);
+//     // StatusType status4 = obj->add_user_to_group(1,2);
+//     // StatusType status9 = obj->add_user_to_group(1,3);
+//     // StatusType status6 = obj->add_user_to_group(123,2);
+//     // StatusType status8 = obj->add_user_to_group(2,3);
+//     // StatusType status5 = obj->remove_user(2);
+  
+//     //StatusType status = obj->add_group(1);
+//     StatusType status6 = obj->add_user(1,true);
+//     StatusType status2 = obj->add_user(2,true);
+//     StatusType status4 = obj->add_user_to_group(1,1);
+//     //StatusType status5 = obj->add_user_to_group(2,1);
+//    StatusType status1 = obj->remove_group(1);
+//     //StatusType status2 = obj->add_user(5257,true);
+
+//     StatusType status7 = obj->add_movie(2772,Genre::ACTION, 14, false);
+//     output_t<int> status8 = obj->get_group_recommendation(1);
+//     //StatusType status5 = obj->remove_user(5257);
+
+//     delete obj;
+// }

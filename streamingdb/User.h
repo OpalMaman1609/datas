@@ -3,6 +3,7 @@
 #include "Group.h"
 #include "Constants.h"
 
+
 class User {
 private:
     int userId;
@@ -14,7 +15,6 @@ private:
     //Saves the movies watched record of the group prior joining it
     int snapGroup[numGenres];
 
-    //group pointer
 
 public:
     User(int userId, bool isVip) : userId(userId), isVip(isVip) {
