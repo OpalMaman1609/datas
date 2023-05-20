@@ -18,5 +18,6 @@ public:
     bool getIsVip() const;
     Genre getGenre() const;
     void watch();
+    void watch(int numViews);
     void rate(int rate);
 };

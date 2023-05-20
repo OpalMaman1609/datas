@@ -1,6 +1,6 @@
 #include <iostream>
 #include "StreamingDBa1.h"
-/*
+
 void my_query_get_all_movies(streaming_database *obj, Genre genre);
 void test();
 
@@ -260,8 +260,7 @@ void test() {
 
 }
 
-int main() {
+int mainDep1() {
     test();
     return 0;
 }
-*/

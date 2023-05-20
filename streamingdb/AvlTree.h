@@ -55,13 +55,13 @@ public:
 
     AvlNode<Key, Value> *RightLeft(AvlNode<Key, Value> *node);
 
-    StatusType InsertAux(AvlNode<Key, Value> *root,AvlNode<Key, Value> *toInsert, AvlNode<Key, Value> *parent);
+    StatusType InsertNode(AvlNode<Key, Value> *root, AvlNode<Key, Value> *parent, AvlNode<Key, Value> *toInsert);
 
     StatusType Insert(Key key, Value value);
 
     AvlNode<Key, Value> *Rotate(AvlNode<Key, Value> *node);
 
-    AvlNode<Key, Value> *DeleteNode(AvlNode<Key, Value> *node, AvlNode<Key, Value> *parentNode);
+    AvlNode<Key, Value> *DeleteNode(AvlNode<Key, Value> *node, AvlNode<Key, Value> *nodeParent);
 
     int CalcBalanceFactor(AvlNode<Key, Value> *node) const;
 
@@ -98,38 +98,41 @@ AvlTree<Key, Value>::AvlTree(const AvlTree<Key, Value> &other) {
 
 template<class Key, class Value>
 StatusType
-AvlTree<Key, Value>::InsertAux(AvlNode<Key, Value> *root, AvlNode<Key, Value> *insert, AvlNode<Key, Value> *parent) {
-    if (!root) {
-        root = insert;
-        root->m_parent = parent;
-        if (parent) {
-            if (parent->m_key > insert->m_key) {
-                parent->m_left_son = root;
-            } else parent->m_right_son = root;
+AvlTree<Key, Value>::InsertNode(AvlNode<Key, Value> *rootNode, AvlNode<Key, Value> *newParent,
+                                AvlNode<Key, Value> *toInsert) {
+    if (!rootNode) {
+        rootNode = toInsert;
+        rootNode->m_parent = newParent;
+        if (newParent) {
+            if (newParent->m_key > toInsert->m_key) {
+                newParent->m_left_son = rootNode;
+            } else newParent->m_right_son = rootNode;
         }
         m_size++;
-    } else if (root->m_key == insert->m_key) {
+    } else if (rootNode->m_key == toInsert->m_key) {
         return StatusType::FAILURE;
     } 
-    else if (root->m_key > insert->m_key) {
-        InsertAux(root->m_left_son, insert, root );
+    else if (rootNode->m_key > toInsert->m_key) {
+        InsertNode(rootNode->m_left_son, rootNode, toInsert);
     } 
-    else if (root->m_key < insert->m_key) {
-        InsertAux(root->m_right_son,insert, root);
+    else if (rootNode->m_key < toInsert->m_key) {
+        InsertNode(rootNode->m_right_son, rootNode, toInsert);
     }
-    int rHeight = 0, lHeight = 0;
-    if (parent) {
-        if (parent->m_left_son || parent->m_right_son)
-            parent->m_height = 1 + std::max(rHeight, lHeight);
-        if (parent->m_left_son)
-            lHeight = parent->m_left_son->m_height;
-        if (parent->m_right_son)
-            rHeight = parent->m_right_son->m_height;
-        
+    int rHeight = 0;
+    int lHeight = 0;
+     if (newParent) {
+
+        if (newParent->m_right_son)
+            rHeight = newParent->m_right_son->m_height;
+        if (newParent->m_left_son)
+            lHeight = newParent->m_left_son->m_height;
+        if (newParent->m_left_son || newParent->m_right_son)
+            newParent->m_height = 1 + std::max(rHeight, lHeight);
         else
-            parent->m_height = 0;
-        this->Rotate(parent);
+            newParent->m_height = 0;
+        this->Rotate(newParent);
     }
+    
     return StatusType::SUCCESS;
 }
 
@@ -251,21 +254,17 @@ template<class Key, class Value>
 void AvlTree<Key, Value>::UpdateBalance(AvlNode<Key, Value> *node) {
     if (!node)
         return;
-    int heightRight = 0, heightLeft = 0;
-    if (node->m_left_son || node->m_right_son){
-        node->m_height = 1 + std::max(heightRight, heightLeft);
-        }
-    if (node->m_left_son){
-        heightLeft = node->m_left_son->m_height;
-    }
-    if (node->m_right_son){
-        heightRight = node->m_right_son->m_height;
-    }
-    else {
+    int rHeight = 0, lHeight = 0;
+    if (node->m_right_son)
+        rHeight = node->m_right_son->m_height;
+    if (node->m_left_son)
+        lHeight = node->m_left_son->m_height;
+    if (node->m_left_son || node->m_right_son)
+        node->m_height = 1 + std::max(rHeight, lHeight);
+    else
         node->m_height = 0;
-        this->Rotate(node);
-        UpdateBalance(node->m_parent);
-    }
+    this->Rotate(node);
+    UpdateBalance(node->m_parent);
 }
 
 
@@ -274,8 +273,8 @@ StatusType AvlTree<Key, Value>::Delete(Key key) {
     AvlNode<Key, Value> *node = FindByKey(key);
     if (!node)
         return StatusType::FAILURE;
-    AvlNode<Key, Value> *newNode = DeleteNode(node, node->m_parent);
-    UpdateBalance(newNode);
+    AvlNode<Key, Value> *new_node = DeleteNode(node, node->m_parent);
+    UpdateBalance(new_node);
     return StatusType::SUCCESS;
 }
 
@@ -395,63 +394,68 @@ void AvlTree<Key, Value>::ReverseInOrder(Key arr[]) {
 
 
 template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, AvlNode<Key, Value> *parentNode) {
-    if (!parentNode->m_left_son && !node->m_right_son) {
-        if (parentNode) {
-            if (parentNode->m_left_son == node) {
-                parentNode->m_left_son = nullptr;
+AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, AvlNode<Key, Value> *nodeParent) {
+    //if node is a leaf
+    if (!node->m_left_son && !node->m_right_son) {
+        if (nodeParent) {
+            if (nodeParent->m_left_son == node) {
+                nodeParent->m_left_son = nullptr;
             } else {
-                parentNode->m_right_son = nullptr;
+                nodeParent->m_right_son = nullptr;
             }
         }
         if(node == m_root)
             m_root = nullptr;
         delete node;
         m_size--;
-        return parentNode;
+        return nodeParent;
     }
+        // if node has only left son
     else if (node->m_left_son && !node->m_right_son) {
-        if (parentNode) {
-            if (parentNode->m_left_son == node) {
-                parentNode->m_left_son = node->m_left_son;
+        if (nodeParent) {
+            if (nodeParent->m_left_son == node) {
+                nodeParent->m_left_son = node->m_left_son;
             } else {
-                parentNode->m_right_son = node->m_left_son;
+                nodeParent->m_right_son = node->m_left_son;
             }
         }
-        node->m_left_son->m_parent = parentNode;
+        node->m_left_son->m_parent = nodeParent;
         if(node == m_root)
             m_root = node->m_left_son;
         delete node;
         m_size--;
-        return parentNode;
+        return nodeParent;
     }
+        // if node has only right son
     else if (!node->m_left_son && node->m_right_son) {
-        if (parentNode) {
-            if (parentNode->m_left_son == node) {
-                parentNode->m_left_son = node->m_right_son;
+        if (nodeParent) {
+            if (nodeParent->m_left_son == node) {
+                nodeParent->m_left_son = node->m_right_son;
             } else {
-                parentNode->m_right_son = node->m_right_son;
+                nodeParent->m_right_son = node->m_right_son;
             }
         }
-        node->m_right_son->m_parent = parentNode;
+        node->m_right_son->m_parent = nodeParent;
         if(node == m_root)
             m_root = node->m_right_son;
         delete node;
         m_size--;
-        return parentNode;
+        return nodeParent;
     }
+        // if node has both sons
     else {
         AvlNode<Key, Value> *maxNode = findMaxNode(node->m_left_son);
-        AvlNode<Key, Value> *maxParentNode = maxNode->m_parent;
+        AvlNode<Key, Value> *maxNodeParent = maxNode->m_parent;
+        //if maxNode is a direct son of node
         if (node->m_left_son == maxNode) {
             node->m_right_son->m_parent = maxNode;
             maxNode->m_right_son = node->m_right_son;
-            maxNode->m_parent = parentNode;
-            if (parentNode) {
-                if (parentNode->m_left_son == node) {
-                    parentNode->m_left_son = maxNode;
+            maxNode->m_parent = nodeParent;
+            if (nodeParent) {
+                if (nodeParent->m_left_son == node) {
+                    nodeParent->m_left_son = maxNode;
                 } else {
-                    parentNode->m_right_son = maxNode;
+                    nodeParent->m_right_son = maxNode;
                 }
             }
             if(node == m_root)
@@ -459,38 +463,41 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
             delete node;
             m_size--;
             return maxNode;
+            //if maxNode isn't a direct son of node
         } else {
             node->m_right_son->m_parent = maxNode;
             node->m_left_son->m_parent = maxNode;
+            //if maxNode has a left son
             if (maxNode->m_left_son) {
-                if (maxParentNode->m_left_son == maxNode) {
-                    maxParentNode->m_left_son = maxNode->m_left_son;
+                if (maxNodeParent->m_left_son == maxNode) {
+                    maxNodeParent->m_left_son = maxNode->m_left_son;
                 } else {
-                    maxParentNode->m_right_son = maxNode->m_left_son;
+                    maxNodeParent->m_right_son = maxNode->m_left_son;
                 }
-                maxNode->m_left_son->m_parent = maxParentNode;
+                maxNode->m_left_son->m_parent = maxNodeParent;
+                //if maxNode is a leaf
             } else {
-                if (maxParentNode->m_left_son == maxNode) {
-                    maxParentNode->m_left_son = nullptr;
+                if (maxNodeParent->m_left_son == maxNode) {
+                    maxNodeParent->m_left_son = nullptr;
                 } else {
-                    maxParentNode->m_right_son = nullptr;
+                    maxNodeParent->m_right_son = nullptr;
                 }
             }
-            maxNode->m_parent = parentNode;
+            maxNode->m_parent = nodeParent;
             maxNode->m_right_son = node->m_right_son;
             maxNode->m_left_son = node->m_left_son;
-            if (parentNode) {
-                if (parentNode->m_left_son == node) {
-                    parentNode->m_left_son = maxNode;
+            if (nodeParent) {
+                if (nodeParent->m_left_son == node) {
+                    nodeParent->m_left_son = maxNode;
                 } else {
-                    parentNode->m_right_son = maxNode;
+                    nodeParent->m_right_son = maxNode;
                 }
             }
             if(node == m_root)
                 m_root = maxNode;
             delete node;
             m_size--;
-            return maxParentNode;
+            return maxNodeParent;
         }
     }
 }
@@ -510,7 +517,7 @@ StatusType AvlTree<Key, Value>::Insert(Key key, Value value) {
         m_size++;
         return StatusType::SUCCESS;
     } else {
-        return InsertAux(m_root, node, nullptr);
+        return InsertNode(m_root, nullptr, node);
     }
 }
 

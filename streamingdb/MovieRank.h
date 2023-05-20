@@ -20,6 +20,7 @@ public:
     bool operator<(const MovieRank& other);
     bool operator>(const MovieRank& other);
     bool operator==(const MovieRank& other);
+    friend class Movie;
 };
 
 
