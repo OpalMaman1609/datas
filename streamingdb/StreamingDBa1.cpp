@@ -97,15 +97,26 @@ StatusType streaming_database::remove_movie(int movieId)
     }
 
     // removes the movie from general tree
-        int movieGenre = (int)movieNode->m_value->getGenre();
-    // removes the tree from his genre tree
-    this->deleteMovieFromGenresTreeArray(movieNode->m_value->getGenre(), movieNode->m_value->getMovieRank());
+    int movieGenre = (int)movieNode->m_value->getGenre();
+
+    AvlNode<MovieRank, Movie*>* movieGenreNode = m_genreTreesArray[movieGenre]->FindByKey(
+        movieNode->m_value->getMovieRank()
+        );
+    
 
     // if movie is current max, needs to find in the same genre
     if (m_maxViewsPerGenre[movieGenre] != nullptr && m_maxViewsPerGenre[movieGenre]->m_value == movieId) {
         delete m_maxViewsPerGenre[movieGenre];
-        this->updateTopRatedMoviePerGenre(*(movieNode->m_value));
+        m_maxViewsPerGenre[movieGenre] = nullptr;
+        if (movieGenreNode->m_left_son != nullptr) {
+            this->updateTopRatedMoviePerGenre(*(movieGenreNode->m_left_son->m_value));
+        } else if (movieGenreNode->m_parent != nullptr) {
+            this->updateTopRatedMoviePerGenre(*(movieGenreNode->m_parent->m_value));
+        }
     }
+
+    // removes the tree from his genre tree
+    this->deleteMovieFromGenresTreeArray(movieNode->m_value->getGenre(), movieNode->m_value->getMovieRank());
 
     // updates the max views for genre & general
     m_movieCountByGenre[movieGenre]--;
@@ -289,12 +300,13 @@ StatusType streaming_database::group_watch(int groupId,int movieId)
     // updates number of views as a group
 	group->m_value.groupViewsCount[movieGenre] += group->m_value.numUsers;
 	group->m_value.groupViewsCount[(int)Genre::NONE] += group->m_value.numUsers;
-    this->updateTopRatedMoviePerGenre(*(movieNode->m_value));
 
     // remove & insert to tree, in order to place
     this->deleteMovieFromGenresTreeArray(movieNode->m_value->getGenre(), movieNode->m_value->getMovieRank());
     movieNode->m_value->watch(group->m_value.numUsers);
     this->insertMovieToGenresTreeArray(movieNode->m_value->getGenre(), *(movieNode->m_value));
+
+    this->updateTopRatedMoviePerGenre(*(movieNode->m_value));
 
     return StatusType::SUCCESS;
 }
@@ -367,7 +379,21 @@ StatusType streaming_database::rate_movie(int userId, int movieId, int rating)
     movieNode->m_value->rate(rating);
     this->insertMovieToGenresTreeArray(movieNode->m_value->getGenre(), *(movieNode->m_value));
 
-    this->updateTopRatedMoviePerGenre(*(movieNode->m_value));
+    // after rate, should update max ranked in genre may have changed
+    int genreInt = (int)movieNode->m_value->getGenre();
+    if (m_maxViewsPerGenre[genreInt] != nullptr) {
+        delete m_maxViewsPerGenre[genreInt];
+        m_maxViewsPerGenre[genreInt] = nullptr;
+
+    }
+
+    // FindMax cannot return max
+    AvlNode<MovieRank, Movie*>* movieGenreNode = m_genreTreesArray[genreInt]->FindByKey(
+        m_genreTreesArray[genreInt]->FindMax()->m_key
+        );
+
+    
+    this->updateTopRatedMoviePerGenre(*(movieGenreNode->m_value));
     return StatusType::SUCCESS;
 }
 

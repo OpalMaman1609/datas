@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TESTS_TO_RUN=3
+TESTS_TO_RUN=500
 EXECUTABLE=./prog
 
 RED='\033[0;31m'
