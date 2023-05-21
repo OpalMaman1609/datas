@@ -6,20 +6,21 @@
 #include "Pair.h"
 
 
-template<class Key, class Value>
+template<class Key, class Value, bool SHOULD_FREE>
 class AvlNode {
 public:
     int m_height{};
     Value m_value;
     Key m_key;
+    bool m_should_free;
     AvlNode *m_parent;
     AvlNode *m_right_son;
     AvlNode *m_left_son;
 
     AvlNode(Key key, Value value): m_height(0),m_value(value),m_key(key),
-    m_parent(nullptr),m_right_son(nullptr),m_left_son(nullptr) {}
+    m_parent(nullptr),m_right_son(nullptr),m_left_son(nullptr), m_should_free(SHOULD_FREE) {}
 
-    AvlNode(AvlNode<Key, Value> &other) {
+    AvlNode(AvlNode<Key, Value, SHOULD_FREE> &other) {
         this->m_height = other.m_height;
         this->m_value = other.m_value;
         this->m_key = other.m_key;
@@ -31,11 +32,41 @@ public:
     ~AvlNode() = default;
 };
 
+template<class Key, class Value, bool SHOULD_FREE>
+class AvlNode<Key, Value*, SHOULD_FREE> {
+public:
+    int m_height{};
+    Value* m_value;
+    Key m_key;
+    bool m_should_free;
+    AvlNode *m_parent;
+    AvlNode *m_right_son;
+    AvlNode *m_left_son;
 
-template<class Key, class Value>
+    AvlNode(Key key, Value* value): m_height(0),m_value(value),m_key(key),
+    m_parent(nullptr),m_right_son(nullptr),m_left_son(nullptr), m_should_free(SHOULD_FREE) {}
+
+    AvlNode(AvlNode<Key, Value*, SHOULD_FREE> &other) {
+        this->m_height = other.m_height;
+        this->m_value = other.m_value;
+        this->m_key = other.m_key;
+        this->m_parent = other.m_parent;
+        this->m_right_son = other.m_right_son;
+        this->m_left_son = other.m_left_son;
+    }
+
+    ~AvlNode() {
+        if (m_should_free) {
+            delete m_value;
+        }
+    };
+};
+
+
+template<class Key, class Value, bool SHOULD_FREE>
 class AvlTree {
 public:
-    AvlNode<Key, Value> *m_root;
+    AvlNode<Key, Value, SHOULD_FREE> *m_root;
     int m_size;
 
 public:
@@ -43,63 +74,63 @@ public:
 
     ~AvlTree();
 
-    AvlTree(const AvlTree<Key, Value> &other);
+    AvlTree(const AvlTree<Key, Value, SHOULD_FREE> &other);
 
-    AvlNode<Key, Value> *FindByKey(Key key);
+    AvlNode<Key, Value, SHOULD_FREE> *FindByKey(Key key);
 
-    AvlNode<Key, Value> *LeftLeft(AvlNode<Key, Value> *node);
+    AvlNode<Key, Value, SHOULD_FREE> *LeftLeft(AvlNode<Key, Value, SHOULD_FREE> *node);
         
-    AvlNode<Key, Value> *LeftRight(AvlNode<Key, Value> *node);
+    AvlNode<Key, Value, SHOULD_FREE> *LeftRight(AvlNode<Key, Value, SHOULD_FREE> *node);
 
-    AvlNode<Key, Value> *RightRight(AvlNode<Key, Value> *node);
+    AvlNode<Key, Value, SHOULD_FREE> *RightRight(AvlNode<Key, Value, SHOULD_FREE> *node);
 
-    AvlNode<Key, Value> *RightLeft(AvlNode<Key, Value> *node);
+    AvlNode<Key, Value, SHOULD_FREE> *RightLeft(AvlNode<Key, Value, SHOULD_FREE> *node);
 
-    StatusType InsertNode(AvlNode<Key, Value> *root, AvlNode<Key, Value> *parent, AvlNode<Key, Value> *toInsert);
+    StatusType InsertNode(AvlNode<Key, Value, SHOULD_FREE> *root, AvlNode<Key, Value, SHOULD_FREE> *parent, AvlNode<Key, Value, SHOULD_FREE> *toInsert);
 
     StatusType Insert(Key key, Value value);
 
-    AvlNode<Key, Value> *Rotate(AvlNode<Key, Value> *node);
+    AvlNode<Key, Value, SHOULD_FREE> *Rotate(AvlNode<Key, Value, SHOULD_FREE> *node);
 
-    AvlNode<Key, Value> *DeleteNode(AvlNode<Key, Value> *node, AvlNode<Key, Value> *nodeParent);
+    AvlNode<Key, Value, SHOULD_FREE> *DeleteNode(AvlNode<Key, Value, SHOULD_FREE> *node, AvlNode<Key, Value, SHOULD_FREE> *nodeParent);
 
-    int CalcBalanceFactor(AvlNode<Key, Value> *node) const;
+    int CalcBalanceFactor(AvlNode<Key, Value, SHOULD_FREE> *node) const;
 
-    void UpdateBalance(AvlNode<Key, Value> *node);
+    void UpdateBalance(AvlNode<Key, Value, SHOULD_FREE> *node);
 
     StatusType Delete(Key key);
 
-    void DeleteTree(AvlNode<Key, Value> *node);
+    void DeleteTree(AvlNode<Key, Value, SHOULD_FREE> *node);
 
-    AvlNode<Key, Value> *NextInOrder(AvlNode<Key, Value> *node);
+    AvlNode<Key, Value, SHOULD_FREE> *NextInOrder(AvlNode<Key, Value, SHOULD_FREE> *node);
 
-    AvlNode<Key, Value> *FindMax();
+    AvlNode<Key, Value, SHOULD_FREE> *FindMax();
 
     void ReverseInOrder(Key arr[]);
 };
 
 
-template<class Key, class Value>
-AvlTree<Key, Value>::AvlTree() : m_root(nullptr), m_size(0) {}
+template<class Key, class Value, bool SHOULD_FREE>
+AvlTree<Key, Value, SHOULD_FREE>::AvlTree() : m_root(nullptr), m_size(0) {}
 
 
-template<class Key, class Value>
-AvlTree<Key, Value>::~AvlTree() {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlTree<Key, Value, SHOULD_FREE>::~AvlTree() {
     if (m_root != nullptr) {
         DeleteTree(m_root);
     }
 }
 
-template<class Key, class Value>
-AvlTree<Key, Value>::AvlTree(const AvlTree<Key, Value> &other) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlTree<Key, Value, SHOULD_FREE>::AvlTree(const AvlTree<Key, Value, SHOULD_FREE> &other) {
     m_size = other.m_size;
     m_root = other.m_root;
 }
 
-template<class Key, class Value>
+template<class Key, class Value, bool SHOULD_FREE>
 StatusType
-AvlTree<Key, Value>::InsertNode(AvlNode<Key, Value> *rootNode, AvlNode<Key, Value> *newParent,
-                                AvlNode<Key, Value> *toInsert) {
+AvlTree<Key, Value, SHOULD_FREE>::InsertNode(AvlNode<Key, Value, SHOULD_FREE> *rootNode, AvlNode<Key, Value, SHOULD_FREE> *newParent,
+                                AvlNode<Key, Value, SHOULD_FREE> *toInsert) {
     if (!rootNode) {
         rootNode = toInsert;
         rootNode->m_parent = newParent;
@@ -136,13 +167,13 @@ AvlTree<Key, Value>::InsertNode(AvlNode<Key, Value> *rootNode, AvlNode<Key, Valu
     return StatusType::SUCCESS;
 }
 
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::FindByKey(Key key) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::FindByKey(Key key) {
     return findNode(m_root, key);
 }
 
-template<class Key, class Value>
-AvlNode<Key, Value> *findNode(AvlNode<Key, Value> *rootNode, Key key) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *findNode(AvlNode<Key, Value, SHOULD_FREE> *rootNode, Key key) {
     if (!rootNode) {
         return nullptr;
     } else if (rootNode->m_key == key) {
@@ -155,8 +186,8 @@ AvlNode<Key, Value> *findNode(AvlNode<Key, Value> *rootNode, Key key) {
 }
 
 
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::LeftRight(AvlNode<Key, Value> *node) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::LeftRight(AvlNode<Key, Value, SHOULD_FREE> *node) {
     node->m_left_son = RightRight(node->m_left_son);
     return LeftLeft(node);
 }
@@ -164,17 +195,17 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::LeftRight(AvlNode<Key, Value> *node) {
 
 
 
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::LeftLeft(AvlNode<Key, Value> *node) {
-    AvlNode<Key, Value> *aGroup;
-    AvlNode<Key, Value> *bGroup;
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::LeftLeft(AvlNode<Key, Value, SHOULD_FREE> *node) {
+    AvlNode<Key, Value, SHOULD_FREE> *aGroup;
+    AvlNode<Key, Value, SHOULD_FREE> *bGroup;
     aGroup = node;
     bGroup = aGroup->m_left_son;
     aGroup->m_left_son = bGroup->m_right_son;
     if (bGroup->m_right_son) {
         bGroup->m_right_son->m_parent = aGroup;
     }
-    AvlNode<Key, Value> *aGroupParent = aGroup->m_parent;
+    AvlNode<Key, Value, SHOULD_FREE> *aGroupParent = aGroup->m_parent;
     if (aGroupParent) {
         if (aGroupParent->m_right_son == aGroup)
             aGroupParent->m_right_son = bGroup;
@@ -192,17 +223,17 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::LeftLeft(AvlNode<Key, Value> *node) {
     return bGroup;
 }
 
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::RightRight(AvlNode<Key, Value> *node) {
-    AvlNode<Key, Value> *aGroup;
-    AvlNode<Key, Value> *bGroup;
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::RightRight(AvlNode<Key, Value, SHOULD_FREE> *node) {
+    AvlNode<Key, Value, SHOULD_FREE> *aGroup;
+    AvlNode<Key, Value, SHOULD_FREE> *bGroup;
     aGroup = node;
     bGroup = aGroup->m_right_son;
     aGroup->m_right_son = bGroup->m_left_son;
     if (bGroup->m_left_son) {
         bGroup->m_left_son->m_parent = aGroup;
     }
-    AvlNode<Key, Value> *aGroupParent = aGroup->m_parent;
+    AvlNode<Key, Value, SHOULD_FREE> *aGroupParent = aGroup->m_parent;
     if (aGroupParent) {
         if (aGroupParent->m_right_son == aGroup)
             aGroupParent->m_right_son = bGroup;
@@ -222,8 +253,8 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::RightRight(AvlNode<Key, Value> *node) 
 
 
 
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::RightLeft(AvlNode<Key, Value> *node) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::RightLeft(AvlNode<Key, Value, SHOULD_FREE> *node) {
     node->m_right_son = LeftLeft(node->m_right_son);
     return RightRight(node);
 }
@@ -232,8 +263,8 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::RightLeft(AvlNode<Key, Value> *node) {
 
 
 
-template<class Key, class Value>
-int AvlTree<Key, Value>::CalcBalanceFactor(AvlNode<Key, Value> *node) const {
+template<class Key, class Value, bool SHOULD_FREE>
+int AvlTree<Key, Value, SHOULD_FREE>::CalcBalanceFactor(AvlNode<Key, Value, SHOULD_FREE> *node) const {
     if (node == nullptr) {
         return 0;
     }
@@ -250,8 +281,8 @@ int AvlTree<Key, Value>::CalcBalanceFactor(AvlNode<Key, Value> *node) const {
 
 
 
-template<class Key, class Value>
-void AvlTree<Key, Value>::UpdateBalance(AvlNode<Key, Value> *node) {
+template<class Key, class Value, bool SHOULD_FREE>
+void AvlTree<Key, Value, SHOULD_FREE>::UpdateBalance(AvlNode<Key, Value, SHOULD_FREE> *node) {
     if (!node)
         return;
     int rHeight = 0, lHeight = 0;
@@ -268,20 +299,20 @@ void AvlTree<Key, Value>::UpdateBalance(AvlNode<Key, Value> *node) {
 }
 
 
-template<class Key, class Value>
-StatusType AvlTree<Key, Value>::Delete(Key key) {
-    AvlNode<Key, Value> *node = FindByKey(key);
+template<class Key, class Value, bool SHOULD_FREE>
+StatusType AvlTree<Key, Value, SHOULD_FREE>::Delete(Key key) {
+    AvlNode<Key, Value, SHOULD_FREE> *node = FindByKey(key);
     if (!node)
         return StatusType::FAILURE;
-    AvlNode<Key, Value> *new_node = DeleteNode(node, node->m_parent);
+    AvlNode<Key, Value, SHOULD_FREE> *new_node = DeleteNode(node, node->m_parent);
     UpdateBalance(new_node);
     return StatusType::SUCCESS;
 }
 
 
 
-template<class Key, class Value>
-void AvlTree<Key, Value>::DeleteTree(AvlNode<Key, Value> *node) {
+template<class Key, class Value, bool SHOULD_FREE>
+void AvlTree<Key, Value, SHOULD_FREE>::DeleteTree(AvlNode<Key, Value, SHOULD_FREE> *node) {
     if (node == nullptr) {
         return;
     }
@@ -292,8 +323,8 @@ void AvlTree<Key, Value>::DeleteTree(AvlNode<Key, Value> *node) {
 
 
 // Preforms the rotation needed
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::Rotate(AvlNode<Key, Value> *node) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::Rotate(AvlNode<Key, Value, SHOULD_FREE> *node) {
     int bf = CalcBalanceFactor(node);
     if (bf >= 2) {
         if (CalcBalanceFactor(node->m_left_son) >= 0) {
@@ -310,17 +341,17 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::Rotate(AvlNode<Key, Value> *node) {
     } else return node;
 }
 
-template<class Key, class Value>
-AvlNode<Key, Value> *findMinNode(AvlNode<Key, Value> *root) {
-    AvlNode<Key, Value> *node = root;
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *findMinNode(AvlNode<Key, Value, SHOULD_FREE> *root) {
+    AvlNode<Key, Value, SHOULD_FREE> *node = root;
     while (node->m_left_son != nullptr) {
         node = node->m_left_son;
     }
     return node;
 }
 
-template<class Key, class Value>
-void updateHeight(AvlNode<Key, Value> *node) {
+template<class Key, class Value, bool SHOULD_FREE>
+void updateHeight(AvlNode<Key, Value, SHOULD_FREE> *node) {
     int Rheight = 0;
     int Lheight = 0;
     if (node->m_right_son != nullptr) {
@@ -340,15 +371,15 @@ void updateHeight(AvlNode<Key, Value> *node) {
 
 
 
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::NextInOrder(AvlNode<Key, Value> *node) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::NextInOrder(AvlNode<Key, Value, SHOULD_FREE> *node) {
     if (!node) {
         return nullptr;
     }
     if (node->m_right_son) {
         return findMinNode(node->m_right_son);
     }
-    AvlNode<Key, Value> *parent = node->m_parent;
+    AvlNode<Key, Value, SHOULD_FREE> *parent = node->m_parent;
     while (parent != nullptr && node == parent->m_right_son) {
         node = parent;
         parent = parent->m_parent;
@@ -356,14 +387,14 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::NextInOrder(AvlNode<Key, Value> *node)
     return parent;
 }
 
-template<class Key, class Value>
-AvlNode<Key, Value>* AvlTree<Key, Value>::FindMax() {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE>* AvlTree<Key, Value, SHOULD_FREE>::FindMax() {
     return findMaxNode(m_root);
 }
 
-template<class Key, class Value>
-AvlNode<Key, Value> *findMaxNode(AvlNode<Key, Value> *root) {
-    AvlNode<Key, Value> *node = root;
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *findMaxNode(AvlNode<Key, Value, SHOULD_FREE> *root) {
+    AvlNode<Key, Value, SHOULD_FREE> *node = root;
     while (node->m_right_son != nullptr) {
         node = node->m_right_son;
     }
@@ -373,8 +404,8 @@ AvlNode<Key, Value> *findMaxNode(AvlNode<Key, Value> *root) {
 
 
 
-template<class Key, class Value>
-void ReverseInOrderUtil(AvlNode<Key, Value>* root, Key arr[], int * index) {
+template<class Key, class Value, bool SHOULD_FREE>
+void ReverseInOrderUtil(AvlNode<Key, Value, SHOULD_FREE>* root, Key arr[], int * index) {
     if (!root) {
         return;
     }
@@ -386,15 +417,15 @@ void ReverseInOrderUtil(AvlNode<Key, Value>* root, Key arr[], int * index) {
     ReverseInOrderUtil(root->m_left_son, arr, index);
 }
 
-template<class Key, class Value>
-void AvlTree<Key, Value>::ReverseInOrder(Key arr[]) {
+template<class Key, class Value, bool SHOULD_FREE>
+void AvlTree<Key, Value, SHOULD_FREE>::ReverseInOrder(Key arr[]) {
     int i = 0;
     ReverseInOrderUtil(m_root, arr, &i);
 }
 
 
-template<class Key, class Value>
-AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, AvlNode<Key, Value> *nodeParent) {
+template<class Key, class Value, bool SHOULD_FREE>
+AvlNode<Key, Value, SHOULD_FREE> *AvlTree<Key, Value, SHOULD_FREE>::DeleteNode(AvlNode<Key, Value, SHOULD_FREE> *node, AvlNode<Key, Value, SHOULD_FREE> *nodeParent) {
     //if node is a leaf
     if (!node->m_left_son && !node->m_right_son) {
         if (nodeParent) {
@@ -444,8 +475,8 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
     }
         // if node has both sons
     else {
-        AvlNode<Key, Value> *maxNode = findMaxNode(node->m_left_son);
-        AvlNode<Key, Value> *maxNodeParent = maxNode->m_parent;
+        AvlNode<Key, Value, SHOULD_FREE> *maxNode = findMaxNode(node->m_left_son);
+        AvlNode<Key, Value, SHOULD_FREE> *maxNodeParent = maxNode->m_parent;
         //if maxNode is a direct son of node
         if (node->m_left_son == maxNode) {
             node->m_right_son->m_parent = maxNode;
@@ -504,11 +535,11 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
 
 
 
-template<class Key, class Value>
-StatusType AvlTree<Key, Value>::Insert(Key key, Value value) {
-    AvlNode<Key, Value> *node;
+template<class Key, class Value, bool SHOULD_FREE>
+StatusType AvlTree<Key, Value, SHOULD_FREE>::Insert(Key key, Value value) {
+    AvlNode<Key, Value, SHOULD_FREE> *node;
     try {
-        node = new AvlNode<Key, Value>(key, value);
+        node = new AvlNode<Key, Value, SHOULD_FREE>(key, value);
     } catch (std::bad_alloc &e) {
         return StatusType::ALLOCATION_ERROR;
     }

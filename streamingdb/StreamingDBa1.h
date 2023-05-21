@@ -25,12 +25,12 @@
 
 class streaming_database {
 private:
-    AvlTree<int,User> users;
-    AvlTree<int,Group> m_groups;
-    AvlTree<int, Movie*>* m_idMovieTree;
+    AvlTree<int,User, false> users;
+    AvlTree<int,Group, false> m_groups;
+    AvlTree<int, Movie*, true>* m_idMovieTree;
 
     // an array of pointers -> pointer to tree for each genre
-    AvlTree<MovieRank, Movie*>* m_genreTreesArray[numGenres];
+    AvlTree<MovieRank, Movie*, true>* m_genreTreesArray[numGenres];
     int m_movieCountByGenre[numGenres];
 
     // each pair will look like <movie rank, id>

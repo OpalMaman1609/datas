@@ -7,7 +7,7 @@
 
 class User;
 
-template<class Key, class Value>
+template<class Key, class Value, bool SHOULD_FREE>
 class AvlNode;
 
 
@@ -25,7 +25,7 @@ private:
     //Sums the number of views - +=movies*numUsers
     int groupViewsCount[numGenres];
     //Tree of pointers to users
-    AvlTree<int,User *> groupUsersTree;
+    AvlTree<int,User *, false> groupUsersTree;
 
 
 public:

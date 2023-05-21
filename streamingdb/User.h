@@ -24,6 +24,16 @@ public:
             snapGroup[i]=0;
         }
     }
+    User(const User &other) {
+        this->userId = other.userId;
+        this->isVip = other.isVip;
+        for (int i = 0; i < numGenres; i++) {
+            this->viewsLog[i] = other.viewsLog[i];
+            this->snapGroup[i] = other.snapGroup[i];
+        }
+        group = other.group;
+
+    }
     friend class streaming_database;
 }
 ;
