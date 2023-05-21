@@ -4,7 +4,7 @@ streaming_database::streaming_database()
 {
     users = AvlTree<int,User, false>();
     m_groups = AvlTree<int,Group, false>();
-    m_idMovieTree = new AvlTree<int, Movie*, true>();
+    m_idMovieTree = AvlTree<int, Movie*, true>();
     // for each genre, creates a tree
     for (int i = 0; i < numGenres; i++) {
         m_genreTreesArray[i] = new AvlTree<MovieRank, Movie*, true>();
@@ -63,7 +63,7 @@ StatusType streaming_database::add_movie(int movieId, Genre genre, int views, bo
         return StatusType::INVALID_INPUT;
     }
 
-    if (this->m_idMovieTree->FindByKey(movieId) != nullptr) {
+    if (this->m_idMovieTree.FindByKey(movieId) != nullptr) {
         return StatusType::FAILURE;
     }
 
@@ -74,7 +74,7 @@ StatusType streaming_database::add_movie(int movieId, Genre genre, int views, bo
         return StatusType::ALLOCATION_ERROR;
     }
 
-    m_idMovieTree->Insert(movieId, movie);
+    m_idMovieTree.Insert(movieId, movie);
     this->insertMovieToGenresTreeArray(genre, *movie);
 
     // updates number of movies in correct genre & all movies count
@@ -93,7 +93,7 @@ StatusType streaming_database::remove_movie(int movieId)
         return StatusType::INVALID_INPUT;
     }
 
-    AvlNode<int, Movie*, true>* movieNode = this->m_idMovieTree->FindByKey(movieId);
+    AvlNode<int, Movie*, true>* movieNode = this->m_idMovieTree.FindByKey(movieId);
     if (movieNode == nullptr) {
         return StatusType::FAILURE;
     }
@@ -123,7 +123,7 @@ StatusType streaming_database::remove_movie(int movieId)
     // updates the max views for genre & general
     m_movieCountByGenre[movieGenre]--;
     m_movieCountByGenre[(int)Genre::NONE]--;
-    m_idMovieTree->Delete(movieId);
+    m_idMovieTree.Delete(movieId);
 	return StatusType::SUCCESS;
 }
 
@@ -254,7 +254,7 @@ StatusType streaming_database::user_watch(int userId, int movieId)
     }
 
     AvlNode<int, User, false>* userNode = users.FindByKey(userId);
-    AvlNode<int, Movie*, true>* movieNode = m_idMovieTree->FindByKey(movieId);
+    AvlNode<int, Movie*, true>* movieNode = m_idMovieTree.FindByKey(movieId);
 
     if (userNode == nullptr || movieNode == nullptr || (movieNode->m_value->getIsVip() && !userNode->m_value.isVip)) {
         return StatusType::FAILURE;
@@ -286,7 +286,7 @@ StatusType streaming_database::group_watch(int groupId,int movieId)
 	if (movieId <= 0 || groupId <= 0){
 		return StatusType::INVALID_INPUT;
 	}
-	AvlNode<int, Movie*, true> *movieNode = m_idMovieTree->FindByKey(movieId);
+	AvlNode<int, Movie*, true> *movieNode = m_idMovieTree.FindByKey(movieId);
 	AvlNode<int, Group, false> *group = m_groups.FindByKey(groupId);
 	//If group/user is not found Find returns nullptr
 	if (!movieNode || !group || (group->m_value.numUsers == 0)) {
@@ -371,7 +371,7 @@ StatusType streaming_database::rate_movie(int userId, int movieId, int rating)
         return StatusType::INVALID_INPUT;
     }
 
-    AvlNode<int, Movie*, true>* movieNode = m_idMovieTree->FindByKey(movieId);
+    AvlNode<int, Movie*, true>* movieNode = m_idMovieTree.FindByKey(movieId);
     AvlNode<int, User, false>* userNode = users.FindByKey(userId);
     if (movieNode == nullptr || userNode == nullptr || (movieNode->m_value->getIsVip() && !userNode->m_value.isVip)) {
         return StatusType::FAILURE;
