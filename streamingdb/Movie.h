@@ -3,7 +3,7 @@
 
 class Movie {
 private:
-    MovieRank* m_movieRank;
+    MovieRank m_movieRank;
     bool m_isVip;
     Genre m_genre;
 public:

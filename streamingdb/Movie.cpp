@@ -1,15 +1,15 @@
 #include "Movie.h"
 
 int Movie::getId() const {
-        return m_movieRank->getId();
+        return this->getMovieRank().getId();
     }
 
 double Movie::getRate() const {
-    return m_movieRank->getRating();
+    return this->getMovieRank().getRating();
 }
 
 int Movie::getViews() const {
-    return m_movieRank->getViews();
+    return this->getMovieRank().getViews();
 }
 
 bool Movie::getIsVip() const {
@@ -21,32 +21,30 @@ Genre Movie::getGenre() const {
 }
 
 MovieRank Movie::getMovieRank() const {
-    return *m_movieRank;
+    return m_movieRank;
 }
 void Movie::watch() {
-    m_movieRank->incrementViews();
+    m_movieRank.incrementViews();
 }
 
 void Movie::watch(int numViews) {
-    m_movieRank->m_views += numViews;
+    m_movieRank.m_views += numViews;
 }
 
 void Movie::rate(int rate) {
-    m_movieRank->setRate(rate);
+    m_movieRank.setRate(rate);
 }
 
 Movie::Movie(int id, int views, bool isVip, Genre genre): m_isVip(isVip), m_genre(genre) {
-    m_movieRank = new MovieRank(id, views);
+    m_movieRank = MovieRank(id, views);
 }
 
 Movie::Movie(const Movie& other) {
     this->m_isVip = other.m_isVip;
     this->m_genre = other.m_genre;
-    this->m_movieRank = new MovieRank(other.m_movieRank->getId(), other.m_movieRank->getViews());
-    this->m_movieRank->m_rating = other.m_movieRank->m_rating;
-    this->m_movieRank->m_numRates = other.m_movieRank->m_numRates;
+    this->m_movieRank = MovieRank(other.getMovieRank().getId(), other.getMovieRank().getViews());
+    this->m_movieRank.m_rating = other.m_movieRank.m_rating;
+    this->m_movieRank.m_numRates = other.m_movieRank.m_numRates;
 }
 
-Movie::~Movie() {
-    delete m_movieRank;
-}
+Movie::~Movie() = default;

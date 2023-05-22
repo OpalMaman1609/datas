@@ -35,7 +35,7 @@
 	
 //     // Execute all commands in file
 // 	string op;
-//     std::ifstream infile("./inFiles/test78.in");
+//     std::ifstream infile("./inFiles/test1.in");
 // 	while (infile >> op)
 //     // while (cin >> op)
 //     {
