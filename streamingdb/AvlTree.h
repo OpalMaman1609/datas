@@ -395,7 +395,6 @@ void AvlTree<Key, Value>::ReverseInOrder(Key arr[]) {
 
 template<class Key, class Value>
 AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, AvlNode<Key, Value> *nodeParent) {
-    //if node is a leaf
     if (!node->m_left_son && !node->m_right_son) {
         if (nodeParent) {
             if (nodeParent->m_left_son == node) {
@@ -410,7 +409,6 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
         m_size--;
         return nodeParent;
     }
-        // if node has only left son
     else if (node->m_left_son && !node->m_right_son) {
         if (nodeParent) {
             if (nodeParent->m_left_son == node) {
@@ -426,7 +424,6 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
         m_size--;
         return nodeParent;
     }
-        // if node has only right son
     else if (!node->m_left_son && node->m_right_son) {
         if (nodeParent) {
             if (nodeParent->m_left_son == node) {
@@ -442,11 +439,9 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
         m_size--;
         return nodeParent;
     }
-        // if node has both sons
     else {
         AvlNode<Key, Value> *maxNode = findMaxNode(node->m_left_son);
         AvlNode<Key, Value> *maxNodeParent = maxNode->m_parent;
-        //if maxNode is a direct son of node
         if (node->m_left_son == maxNode) {
             node->m_right_son->m_parent = maxNode;
             maxNode->m_right_son = node->m_right_son;
@@ -463,11 +458,9 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
             delete node;
             m_size--;
             return maxNode;
-            //if maxNode isn't a direct son of node
         } else {
             node->m_right_son->m_parent = maxNode;
             node->m_left_son->m_parent = maxNode;
-            //if maxNode has a left son
             if (maxNode->m_left_son) {
                 if (maxNodeParent->m_left_son == maxNode) {
                     maxNodeParent->m_left_son = maxNode->m_left_son;
@@ -475,7 +468,6 @@ AvlNode<Key, Value> *AvlTree<Key, Value>::DeleteNode(AvlNode<Key, Value> *node, 
                     maxNodeParent->m_right_son = maxNode->m_left_son;
                 }
                 maxNode->m_left_son->m_parent = maxNodeParent;
-                //if maxNode is a leaf
             } else {
                 if (maxNodeParent->m_left_son == maxNode) {
                     maxNodeParent->m_left_son = nullptr;
