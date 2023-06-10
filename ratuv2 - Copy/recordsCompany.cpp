@@ -1,11 +1,19 @@
 #include "recordsCompany.h"
+#include <iostream>
 
 
 RecordsCompany::RecordsCompany():m_costumers(), m_members(){}
 
 RecordsCompany::~RecordsCompany(){}
 
-StatusType RecordsCompany::newMonth(int *records_stocks, int number_of_records){
+StatusType RecordsCompany::newMonth(/*int *records_stocks, int number_of_records*/){
+     RankNode<int, Costumer*> * current = findMinNode(m_members.root);
+    while (current != nullptr) {
+        current->extra = 0;
+        current->privateExtra=0;
+        current->value->deleteExpenses();
+        current = m_members.NextInOrder(current);
+        }
     return StatusType::SUCCESS;
 }
 
@@ -27,6 +35,7 @@ Output_t<int> RecordsCompany::getPhone(int c_id){
     }
     return Output_t<int>(findCostumer->m_value.getCostumerPhone());
 }
+
 StatusType RecordsCompany::makeMember(int c_id){
      if (c_id < 0){
         return StatusType::INVALID_INPUT;
@@ -61,17 +70,22 @@ Output_t<bool> RecordsCompany::isMember(int c_id){
 }
 
 // StatusType RecordsCompany::buyRecord(int c_id, int r_id);
+
+
 StatusType RecordsCompany::addPrize(int c_id1, int c_id2, double  amount){
         if (c_id1 < 0 || c_id2 < 0 || c_id2 < c_id1 || amount <= 0){
             return StatusType::INVALID_INPUT;
         }
-        m_members.addToExtra (c_id2, amount);
-        RankNode<int, Costumer*> *member = m_members.find(c_id1);
-        if (!member->left_son){
-            return StatusType::SUCCESS;
+        RankNode<int, Costumer*> *memberLeft = m_members.findClosestSmallerKey(c_id1);
+        if (memberLeft){
+            m_members.addToExtra (memberLeft->key, (-amount));
+            std::cout << m_members.findClosestSmallerKey(c_id1)->key<< std::endl;
         }
-        RankNode<int, Costumer*> *closestMember = findMaxNode(member->left_son);
-        m_members.addToExtra(closestMember->key, (-amount));
+        RankNode<int, Costumer*> *memberRight = m_members.findClosestSmallerKey(c_id2);
+        if (memberRight){
+            m_members.addToExtra (memberRight->key, amount);
+            std::cout << m_members.findClosestSmallerKey(c_id2)->key;
+        }
         return StatusType::SUCCESS;
 }
 
@@ -95,11 +109,11 @@ int main(){
     status = test_obj->makeMember(1);
     Output_t<bool> is = test_obj->isMember(1);
     test_obj->addCostumer(8,503);
-    status = test_obj->makeMember(8);
+    //status = test_obj->makeMember(8);
     test_obj->addCostumer(12,503);
     status = test_obj->makeMember(12);
     test_obj->addCostumer(4,503);
-    status = test_obj->makeMember(4);
+    //status = test_obj->makeMember(4);
     test_obj->addCostumer(2,503);
     status = test_obj->makeMember(2);
     test_obj->addCostumer(10,503);
@@ -122,72 +136,11 @@ int main(){
     status = test_obj->makeMember(7);
     test_obj->addCostumer(11,503);
     status = test_obj->makeMember(11);
-    test_obj->addPrize(2,3,5);
+    test_obj->addPrize(5,9,5);
+    test_obj->newMonth();
 
     delete test_obj;
     return 0;
 }
 
 
-
-
-
-// void RecordsCompany::addToExtra(int c_id, double  amount){
-// RankNode<int, Costumer*> *root = m_members.root;
-//     bool isRightSequnce = false;
-//     while (root != NULL) {
-//         if (c_id > root->key){
-//             if (isRightSequnce == false){
-//                 root->extra += amount;
-//                 isRightSequnce = true;
-//             }
-//             root = root->right_son;
-//         }
-//         else if (c_id < root->key){
-//             if (isRightSequnce == true){
-//                 root->extra -= amount;
-//                 isRightSequnce = false;
-//             }
-//             root = root->left_son;
-//             }
-//         else {
-//             if (isRightSequnce == false){
-//                 root->extra += amount;
-//             }
-//             if (root->right_son){
-//                 root->right_son->extra -= amount;
-//             }
-//             return; 
-//         }
-//     }
-//     return;
-// }
-
-// int RecordsCompany::sumExtra(int c_id, bool withPrivate){
-// RankNode<int, Costumer*> *root = m_members.root;
-//     bool isRightSequnce = false;
-//     int sum = 0;
-//     while (root != NULL) {
-//         if (c_id > root->key){
-//             sum += root->extra;
-//             root = root->right_son;
-//         }
-//         else if (c_id < root->key){
-//             sum += root->extra;
-//             root = root->left_son;
-//         }
-//         else {
-//             if (withPrivate){
-//                 sum += root->privateExtra;
-//             }
-//             sum += root->extra;
-//             return sum; 
-//         }
-//     }
-//     return 0;
-// }
-
-
-// Output_t<double> RecordsCompany::getExpenses(int c_id);
-// StatusType RecordsCompany::putOnTop(int r_id1, int r_id2);
-// StatusType RecordsCompany::getPlace(int r_id, int *column, int *hight);

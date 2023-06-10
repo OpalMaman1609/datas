@@ -15,7 +15,7 @@ class RecordsCompany {
   public:
     RecordsCompany();
     virtual ~RecordsCompany();
-    StatusType newMonth(int *records_stocks, int number_of_records);
+    StatusType newMonth(/*int *records_stocks, int number_of_records*/);
     StatusType addCostumer(int c_id, int phone);
     Output_t<int> getPhone(int c_id);
     StatusType makeMember(int c_id);

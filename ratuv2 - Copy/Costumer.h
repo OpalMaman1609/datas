@@ -16,8 +16,9 @@ public:
     int getCostumerPhone();
     bool getIfMember();
     void changeToMember();
-    void addToExpencese(double price);
+    void addToExpenses(double price);
     double getExpenses();
+    void deleteExpenses();
 
 };
 #endif //RATUV2_COSTUMER_H

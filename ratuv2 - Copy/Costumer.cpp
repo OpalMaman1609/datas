@@ -14,11 +14,16 @@ void Costumer::changeToMember(){
     return;
 }
 
-void Costumer::addToExpencese(double price){
+void Costumer::addToExpenses(double price){
     m_expenses += price;
     return;
 }
 
 double Costumer::getExpenses(){
     return m_expenses;
+}
+
+void Costumer::deleteExpenses(){
+    m_expenses = 0;
+    return;
 }

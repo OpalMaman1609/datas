@@ -87,11 +87,9 @@ public:
 
     double sumExtra(Key key);
 
+    RankNode<Key, Value> *findClosestSmallerKey(Key target);
 
-
-    // RankNode<Key, Value> *findIndex(int index);
-
-    // RankNode<Key, Value> *findIndexAux(RankNode<Key, Value> *node, int index);
+    RankNode<Key, Value> *NextInOrder(RankNode<Key, Value> *node);
 
 };
 
@@ -175,15 +173,25 @@ RankNode<Key, Value> *RankTree<Key, Value>::RR(RankNode<Key, Value> *node) {
     RankNode<Key, Value> *b;
     a = node;
     b = a->right_son;
+
     a->privateExtra += a->extra;
-    a->left_son->extra += a->extra;
+   if (a->left_son)
+   {
+        a->left_son->extra += a->extra; 
+    }
     double bSum = a->extra +b->extra;
     a->extra = 0;
     b->privateExtra += bSum;
-    b->left_son->extra += bSum;
+   if (b->left_son)
+   {
+        b->left_son->extra += bSum;
+    }
+   if (b->right_son)
+   {
     b->right_son->extra += bSum;
+    }
     b->extra = 0;
-    a->left_son = b->right_son;
+
     a->right_son = b->left_son;
     if (b->left_son) {
         b->left_son->parent = a;
@@ -214,12 +222,21 @@ RankNode<Key, Value> *RankTree<Key, Value>::LL(RankNode<Key, Value> *node) {
     a = node;
     b = a->left_son;
     a->privateExtra += a->extra;
-    a->right_son->extra += a->extra;
+    if (a->right_son)
+    {
+        a->right_son->extra += a->extra;
+    }
     double bSum = a->extra +b->extra;
     a->extra = 0;
     b->privateExtra += bSum;
-    b->left_son->extra += bSum;
-    b->right_son->extra += bSum;
+    if (b->left_son)
+    {
+       b->left_son->extra += bSum;
+    }
+    if (b->right_son)
+    {
+        b->right_son->extra += bSum;
+    }
     b->extra = 0;
     a->left_son = b->right_son;
     if (b->right_son) {
@@ -295,51 +312,32 @@ StatusType RankTree<Key, Value>::insert(Key key, Value value) {
 
 
 
-// template<class Key, class Value>
-// RankNode<Key, Value> *RankTree<Key, Value>::findIndex(int index) {
-//     return findIndexAux(root, index + 1);
-
-// }
-
-// template<class Key, class Value>
-// RankNode<Key, Value> *RankTree<Key, Value>::findIndexAux(RankNode<Key, Value> *node, int index) {
-//     if (node == nullptr) {
-//         return nullptr;
-//     }
-//     if (getWeight(node->left_son) == index - 1) {
-//         return node;
-//     }
-//     if (getWeight(node->left_son) > index - 1) {
-//         return findIndexAux(node->left_son, index);
-//     } else {
-//         return findIndexAux(node->right_son, index - getWeight(node->left_son) - 1);
-//     }
-// }
 
 template<class Key, class Value>
 void RankTree<Key, Value>::addToExtra(Key key, double  amount){
     bool isRightSequnce = false;
-    while (root != NULL) {
-        if (key > root->key){
+    RankNode<Key, Value> * curRoot = root;
+    while (curRoot != NULL) {
+        if (key > curRoot->key){
             if (isRightSequnce == false){
-                root->extra += amount;
+                curRoot->extra += amount;
                 isRightSequnce = true;
             }
-            root = root->right_son;
+            curRoot = curRoot->right_son;
         }
-        else if (key < root->key){
+        else if (key < curRoot->key){
             if (isRightSequnce == true){
-                root->extra -= amount;
+                curRoot->extra -= amount;
                 isRightSequnce = false;
             }
-            root = root->left_son;
+            curRoot = curRoot->left_son;
             }
         else {
             if (isRightSequnce == false){
-                root->extra += amount;
+                curRoot->extra += amount;
             }
-            if (root->right_son){
-                root->right_son->extra -= amount;
+            if (curRoot->right_son){
+                curRoot->right_son->extra -= amount;
             }
             return; 
         }
@@ -350,23 +348,55 @@ void RankTree<Key, Value>::addToExtra(Key key, double  amount){
 template<class Key, class Value>
 double RankTree<Key, Value>::sumExtra(Key key){
     bool isRightSequnce = false;
+    RankNode<Key, Value> * curRoot = root;
     double sum = 0;
-    while (root != NULL) {
-        if (key > root->key){
-            sum += root->extra;
-            root = root->right_son;
+    while (curRoot != NULL) {
+        if (key > curRoot->key){
+            sum += curRoot->extra;
+            curRoot = curRoot->right_son;
         }
-        else if (key < root->key){
-            sum += root->extra;
-            root = root->left_son;
+        else if (key < curRoot->key){
+            sum += curRoot->extra;
+            curRoot = curRoot->left_son;
         }
         else {
-            sum += root->privateExtra;
-            sum += root->extra;
+            sum += curRoot->privateExtra;
+            sum += curRoot->extra;
             return sum; 
         }
     }
     return 0;
+}
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::findClosestSmallerKey(Key target) {
+    Key result = -1;
+    RankNode<Key, Value> * curRoot = root;
+    while (curRoot) {
+        if (curRoot->key < target) {
+            result = result > curRoot->key ? result : curRoot->key;
+            curRoot = curRoot->right_son;
+        } else {
+            curRoot = curRoot->left_son;
+        }
+    }
+    return find(result);
+}
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::NextInOrder(RankNode<Key, Value> *node) {
+    if (!node) {
+        return nullptr;
+    }
+    if (node->right_son) {
+        return findMinNode(node->right_son);
+    }
+    RankNode<Key, Value> *parent = node->parent;
+    while (parent != nullptr && node == parent->right_son) {
+        node = parent;
+        parent = parent->parent;
+    }
+    return parent;
 }
 
 template<class Key, class Value>
@@ -592,64 +622,6 @@ RankNode<Key, Value> *findNode(RankNode<Key, Value> *rootNode, Key key) {
 }
 
 
-// template<class Key, class Value>
-// bool is_tree_valid(RankNode<Key, Value> *root) {
-//     if (!root) {
-//         return true;
-//     }
-//     if (root->height != 1 + std::max(getHeight(root->left_son), getHeight(root->right_son))) {
-//         return false;
-//     }
-//     if (!root->left_son && !root->right_son && root->height != 0) {
-//         return false;
-//     }
-//     if (root->left_son && root->left_son->key >= root->key) {
-//         return false;
-//     }
-//     if (root->right_son && root->right_son->key <= root->key) {
-//         return false;
-//     }
-//     if (root->weight != 1 + getWeight(root->left_son) + getWeight(root->right_son)) {
-//         return false;
-//     }
-//     if (std::abs(BalanceFactor(root)) > 1) {
-//         return false;
-//     }
-//     if (root->parent) {
-//         if (root->parent->left_son != root && root->parent->right_son != root) {
-//             return false;
-//         }
-//     }
-//     if (root->left_son) {
-//         if (root->left_son->parent != root) {
-//             return false;
-//         }
-//     }
-//     if (root->right_son) {
-//         if (root->right_son->parent != root) {
-//             return false;
-//         }
-//     }
-//     return is_tree_valid(root->left_son) && is_tree_valid(root->right_son);
-// }
-
-// template<class Key, class Value>
-// int getHeight(RankNode<Key, Value> *root) {
-//     if (!root) {
-//         return -1;
-//     }
-//     return root->height;
-// }
-
-// template<class Key, class Value>
-// int is_tree_size_valid(RankNode<Key, Value> *root) {
-//     if (!root) {
-//         return 0;
-//     } else {
-//         return is_tree_size_valid(root->left_son) + is_tree_size_valid(root->right_son) + 1;
-//     }
-// }
-
 template<class Key, class Value>
 int BalanceFactor(RankNode<Key, Value> *node) {
     if (node == nullptr) {
@@ -665,13 +637,5 @@ int BalanceFactor(RankNode<Key, Value> *node) {
     }
     return Lheight - Rheight;
 }
-
-// template<class Key, class Value>
-// int getWeight(RankNode<Key, Value> *root) {
-//     if (!root) {
-//         return 0;
-//     }
-//     return root->weight;
-// }
 
 #endif //RATUV2_RankTree_H
