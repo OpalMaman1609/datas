@@ -46,7 +46,7 @@ bool UnionFindNode::operator==(const UnionFindNode& other) {
 }
 
 UnionFindNode::UnionFindNode(int key, int value): m_key(key), 
-    m_value(value), m_height(0), m_sales(0), m_baseColumn(key), m_recordsTowerHeight(value) {};
+    m_value(value), m_height(0), m_sales(0), m_recordsTowerHeight(value), m_baseColumn(key) {};
 
 UnionFindNode::UnionFindNode(const UnionFindNode& other) {
     m_key = other.m_key;
