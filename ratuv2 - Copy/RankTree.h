@@ -14,8 +14,8 @@ public:
     RankNode *parent;
     int weight;
     int height;
-    int extra;
-    int privateExtra;
+    double extra;
+    double privateExtra;
 
     RankNode(Key key, Value value)
             : key(key),
@@ -347,7 +347,7 @@ void RankTree<Key, Value>::addToExtra(Key key, double  amount){
 
 template<class Key, class Value>
 double RankTree<Key, Value>::sumExtra(Key key){
-    bool isRightSequnce = false;
+    //bool isRightSequnce = false;
     RankNode<Key, Value> * curRoot = root;
     double sum = 0;
     while (curRoot != NULL) {

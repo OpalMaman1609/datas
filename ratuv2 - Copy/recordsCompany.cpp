@@ -139,12 +139,12 @@ StatusType RecordsCompany::addPrize(int c_id1, int c_id2, double  amount){
         RankNode<int, Costumer*> *memberLeft = m_members.findClosestSmallerKey(c_id1);
         if (memberLeft){
             m_members.addToExtra (memberLeft->key, (-amount));
-            std::cout << m_members.findClosestSmallerKey(c_id1)->key<< std::endl;
+            //std::cout << m_members.findClosestSmallerKey(c_id1)->key<< std::endl;
         }
         RankNode<int, Costumer*> *memberRight = m_members.findClosestSmallerKey(c_id2);
         if (memberRight){
             m_members.addToExtra (memberRight->key, amount);
-            std::cout << m_members.findClosestSmallerKey(c_id2)->key;
+            //std::cout << m_members.findClosestSmallerKey(c_id2)->key;
         }
         return StatusType::SUCCESS;
 }
