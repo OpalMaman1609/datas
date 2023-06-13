@@ -7,35 +7,35 @@
 template<class Key, class Value>
 class RankNode {
 public:
-    Key key;
-    Value value;
-    RankNode *right_son;
-    RankNode *left_son;
-    RankNode *parent;
-    int weight;
-    int height;
+    Key m_key;
+    Value m_value;
+    RankNode *m_right_son;
+    RankNode *m_left_son;
+    RankNode *m_parent;
+    int m_weight;
+    int m_height;
     double extra;
     double privateExtra;
 
     RankNode(Key key, Value value)
-            : key(key),
-              value(value),
-              right_son(nullptr),
-              left_son(nullptr),
-              parent(nullptr),
-              weight(1),
-              height(0),
+            : m_key(key),
+              m_value(value),
+              m_right_son(nullptr),
+              m_left_son(nullptr),
+              m_parent(nullptr),
+              m_weight(1),
+              m_height(0),
               extra(0),
               privateExtra(0) {}
 
     RankNode(const RankNode<Key, Value> &other) {
-        this->key = other.key;
-        this->value = other.value;
-        this->right_son = other.right_son;
-        this->left_son = other.left_son;
-        this->parent = other.parent;
-        this->weight = other.weight;
-        this->height = other.height;
+        this->m_key = other.m_key;
+        this->m_value = other.m_value;
+        this->m_right_son = other.m_right_son;
+        this->m_left_son = other.m_left_son;
+        this->m_parent = other.m_parent;
+        this->m_weight = other.m_weight;
+        this->m_height = other.m_height;
         this->extra = other.extra;
         this->privateExtra = other.privateExtra;
 
@@ -57,31 +57,31 @@ public:
 
     RankTree(const RankTree<Key, Value> &other);
 
-    void deleteTree(RankNode<Key, Value> *node);
+    RankNode<Key, Value> *FindByKey(Key key);
 
-    int BF(RankNode<Key, Value> *node) const;
+    RankNode<Key, Value> *LeftLeft(RankNode<Key, Value> *node);
 
-    RankNode<Key, Value> *RR(RankNode<Key, Value> *node);
+    RankNode<Key, Value> *LeftRight(RankNode<Key, Value> *node);
 
-    RankNode<Key, Value> *LL(RankNode<Key, Value> *node);
+    RankNode<Key, Value> *RightRight(RankNode<Key, Value> *node);
 
-    RankNode<Key, Value> *RL(RankNode<Key, Value> *node);
-
-    RankNode<Key, Value> *LR(RankNode<Key, Value> *node);
-
-    RankNode<Key, Value> *rotate(RankNode<Key, Value> *node);
-
-    StatusType insert(Key key, Value value);
+    RankNode<Key, Value> *RightLeft(RankNode<Key, Value> *node);
 
     StatusType insertNode(RankNode<Key, Value> *root, RankNode<Key, Value> *parent, RankNode<Key, Value> *toInsert);
 
-    RankNode<Key, Value> *deleteNode(RankNode<Key, Value> *node, RankNode<Key, Value> *nodeParent);
+    StatusType insert(Key key, Value value);
 
-    void updateTreeBalance(RankNode<Key, Value> *node);
+    RankNode<Key, Value> *Rotate(RankNode<Key, Value> *node);
 
-    StatusType remove(Key key);
+    RankNode<Key, Value> *DeleteNode(RankNode<Key, Value> *node, RankNode<Key, Value> *nodeParent);
 
-    RankNode<Key, Value> *find(Key key);
+    int CalcBalanceFactor(RankNode<Key, Value> *node) const;
+
+    void UpdateBalance(RankNode<Key, Value> *node);
+
+    StatusType Delete(Key key);
+
+    void DeleteTree(RankNode<Key, Value> *node);
 
     void addToExtra(Key key, double  amount);
 
@@ -106,7 +106,7 @@ RankTree<Key, Value>::RankTree() : size(0), root(nullptr) {}
 template<class Key, class Value>
 RankTree<Key, Value>::~RankTree() {
     if (root != nullptr) {
-        deleteTree(root);
+        DeleteTree(root);
     }
 }
 
@@ -117,180 +117,252 @@ RankTree<Key, Value>::RankTree(const RankTree<Key, Value> &other) {
 }
 
 template<class Key, class Value>
-void RankTree<Key, Value>::deleteTree(RankNode<Key, Value> *node) {
-    if (node == nullptr) {
-        return;
-    }
-    deleteTree(node->right_son);
-    deleteTree(node->left_son);
-    delete node;
-}
+StatusType
+RankTree<Key, Value>::insertNode(RankNode<Key, Value> *rootNode, RankNode<Key, Value> *newParent,
+                                 RankNode<Key, Value> *toInsert) {
+    if (!rootNode) {
+        rootNode = toInsert;
+        rootNode->m_parent = newParent;
+        if (newParent) {
+            if (newParent->m_key > toInsert->m_key) {
+                newParent->m_left_son = rootNode;
+            } else newParent->m_right_son = rootNode;
+        }
+        size++;
+    } else if (rootNode->m_key == toInsert->m_key) {
+        return StatusType::FAILURE;
 
-//updates a nodes height
-template<class Key, class Value>
-void updateHeight(RankNode<Key, Value> *node) {
-    int Rheight = 0;
-    int Lheight = 0;
+    } else if (rootNode->m_key > toInsert->m_key) {
+        insertNode(rootNode->m_left_son, rootNode, toInsert);
+    } else if (rootNode->m_key < toInsert->m_key) {
+        insertNode(rootNode->m_right_son, rootNode, toInsert);
+    }
+    int rHeight = 0, lHeight = 0;
     int weight = 1;
-    if (node->right_son != nullptr) {
-        Rheight = node->right_son->height;
-        weight += node->right_son->weight;
+    if (newParent) {
+        if (newParent->m_right_son) {
+            rHeight = newParent->m_right_son->m_height;
+            weight += newParent->m_right_son->m_weight;
+        }
+        if (newParent->m_left_son) {
+            lHeight = newParent->m_left_son->m_height;
+            weight += newParent->m_left_son->m_weight;
+        }
+        if (newParent->m_left_son || newParent->m_right_son)
+            newParent->m_height = 1 + std::max(rHeight, lHeight);
+        else
+            newParent->m_height = 0;
+        newParent->m_weight = weight;
+        this->Rotate(newParent);
     }
-    if (node->left_son != nullptr) {
-        Lheight = node->left_son->height;
-        weight += node->left_son->weight;
-    }
-    if (!node->left_son && !node->right_son) {
-        node->height = 0;
-    } else {
-        node->height = 1 + (std::max(Rheight, Lheight));
-    }
-    node->weight = weight;
+    return StatusType::SUCCESS;
+}
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::FindByKey(Key key) {
+    return findNode(root, key);
 }
 
 
-// Calculates Balance Factor
 template<class Key, class Value>
-int RankTree<Key, Value>::BF(RankNode<Key, Value> *node) const {
+RankNode<Key, Value> *findNode(RankNode<Key, Value> *rootNode, Key key) {
+    if (!rootNode) {
+        return nullptr;
+    } else if (rootNode->m_key == key) {
+        return rootNode;
+    } else if (rootNode->m_key > key)
+        return findNode(rootNode->m_left_son, key);
+    else {
+        return findNode(rootNode->m_right_son, key);
+    }
+}
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::LeftRight(RankNode<Key, Value> *node) {
+    node->m_left_son = RightRight(node->m_left_son);
+    return LeftLeft(node);
+}
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::LeftLeft(RankNode<Key, Value> *node) {
+    RankNode<Key, Value> *a;
+    RankNode<Key, Value> *b;
+    a = node;
+    b = a->m_left_son;
+    a->privateExtra += a->extra;
+    if (a->m_right_son)
+    {
+        a->m_right_son->extra += a->extra;
+    }
+    double bSum = a->extra +b->extra;
+    a->extra = 0;
+    b->privateExtra += bSum;
+    if (b->m_left_son)
+    {
+       b->m_left_son->extra += bSum;
+    }
+    if (b->m_right_son)
+    {
+        b->m_right_son->extra += bSum;
+    }
+    b->extra = 0;
+    a->m_left_son = b->m_right_son;
+    if (b->m_right_son) {
+        b->m_right_son->m_parent = a;
+    }
+    RankNode<Key, Value> *a_parent = a->m_parent;
+    if (a_parent) {
+        if (a_parent->m_right_son == a)
+            a_parent->m_right_son = b;
+        else if (a_parent->m_left_son == a)
+            a_parent->m_left_son = b;
+    }
+    b->m_parent = a_parent;
+    b->m_right_son = a;
+    a->m_parent = b;
+    updateHeight(a);
+    updateHeight(b);
+    if (root == node) {
+        root = b;
+    }
+    return b;
+}
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::RightRight(RankNode<Key, Value> *node) {
+    RankNode<Key, Value> *a;
+    RankNode<Key, Value> *b;
+    a = node;
+    b = a->m_right_son;
+
+    a->privateExtra += a->extra;
+   if (a->m_left_son)
+   {
+        a->m_left_son->extra += a->extra; 
+    }
+    double bSum = a->extra +b->extra;
+    a->extra = 0;
+    b->privateExtra += bSum;
+   if (b->m_left_son)
+   {
+        b->m_left_son->extra += bSum;
+    }
+   if (b->m_right_son)
+   {
+    b->m_right_son->extra += bSum;
+    }
+    b->extra = 0;
+
+    a->m_right_son = b->m_left_son;
+    if (b->m_left_son) {
+        b->m_left_son->m_parent = a;
+    }
+    RankNode<Key, Value> *a_parent = a->m_parent;
+    if (a_parent) {
+        if (a_parent->m_right_son == a)
+            a_parent->m_right_son = b;
+        else if (a_parent->m_left_son == a)
+            a_parent->m_left_son = b;
+    }
+    b->m_parent = a_parent;
+    b->m_left_son = a;
+    a->m_parent = b;
+    updateHeight(a);
+    updateHeight(b);
+    if (root == node) {
+        root = b;
+    }
+    return b;
+}
+
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::RightLeft(RankNode<Key, Value> *node) {
+    node->m_right_son = LeftLeft(node->m_right_son);
+    return RightRight(node);
+}
+
+
+template<class Key, class Value>
+int RankTree<Key, Value>::CalcBalanceFactor(RankNode<Key, Value> *node) const {
     if (node == nullptr) {
         return 0;
     }
     int Rheight = -1;
     int Lheight = -1;
-    if (node->right_son != nullptr) {
-        Rheight = node->right_son->height;
+    if (node->m_right_son != nullptr) {
+        Rheight = node->m_right_son->m_height;
     }
-    if (node->left_son != nullptr) {
-        Lheight = node->left_son->height;
+    if (node->m_left_son != nullptr) {
+        Lheight = node->m_left_son->m_height;
     }
     return Lheight - Rheight;
 }
 
-// Preforms Right Right rotation
 template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::RR(RankNode<Key, Value> *node) {
-    RankNode<Key, Value> *a;
-    RankNode<Key, Value> *b;
-    a = node;
-    b = a->right_son;
-
-    a->privateExtra += a->extra;
-   if (a->left_son)
-   {
-        a->left_son->extra += a->extra; 
+void updateHeight(RankNode<Key, Value> *node) {
+    int Rheight = 0;
+    int Lheight = 0;
+    int weight = 1;
+    if (node->m_right_son != nullptr) {
+        Rheight = node->m_right_son->m_height;
+        weight += node->m_right_son->m_weight;
     }
-    double bSum = a->extra +b->extra;
-    a->extra = 0;
-    b->privateExtra += bSum;
-   if (b->left_son)
-   {
-        b->left_son->extra += bSum;
+    if (node->m_left_son != nullptr) {
+        Lheight = node->m_left_son->m_height;
+        weight += node->m_left_son->m_weight;
     }
-   if (b->right_son)
-   {
-    b->right_son->extra += bSum;
+    if (!node->m_left_son && !node->m_right_son) {
+        node->m_height = 0;
+    } else {
+        node->m_height = 1 + (std::max(Rheight, Lheight));
     }
-    b->extra = 0;
-
-    a->right_son = b->left_son;
-    if (b->left_son) {
-        b->left_son->parent = a;
-    }
-    RankNode<Key, Value> *a_parent = a->parent;
-    if (a_parent) {
-        if (a_parent->right_son == a)
-            a_parent->right_son = b;
-        else if (a_parent->left_son == a)
-            a_parent->left_son = b;
-    }
-    b->parent = a_parent;
-    b->left_son = a;
-    a->parent = b;
-    updateHeight(a);
-    updateHeight(b);
-    if (root == node) {
-        root = b;
-    }
-    return b;
+    node->m_weight = weight;
 }
 
-// Preforms Left Left rotation
+
 template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::LL(RankNode<Key, Value> *node) {
-    RankNode<Key, Value> *a;
-    RankNode<Key, Value> *b;
-    a = node;
-    b = a->left_son;
-    a->privateExtra += a->extra;
-    if (a->right_son)
-    {
-        a->right_son->extra += a->extra;
+void RankTree<Key, Value>::DeleteTree(RankNode<Key, Value> *node) {
+    if (node == nullptr) {
+        return;
     }
-    double bSum = a->extra +b->extra;
-    a->extra = 0;
-    b->privateExtra += bSum;
-    if (b->left_son)
-    {
-       b->left_son->extra += bSum;
-    }
-    if (b->right_son)
-    {
-        b->right_son->extra += bSum;
-    }
-    b->extra = 0;
-    a->left_son = b->right_son;
-    if (b->right_son) {
-        b->right_son->parent = a;
-    }
-    RankNode<Key, Value> *a_parent = a->parent;
-    if (a_parent) {
-        if (a_parent->right_son == a)
-            a_parent->right_son = b;
-        else if (a_parent->left_son == a)
-            a_parent->left_son = b;
-    }
-    b->parent = a_parent;
-    b->right_son = a;
-    a->parent = b;
-    updateHeight(a);
-    updateHeight(b);
-    if (root == node) {
-        root = b;
-    }
-    return b;
+    DeleteTree(node->m_right_son);
+    DeleteTree(node->m_left_son);
+    delete node;
 }
 
-// Preforms Right Left rotation
-template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::RL(RankNode<Key, Value> *node) {
-    node->right_son = LL(node->right_son);
-    return RR(node);
-}
 
-// Preforms Left Right rotation
 template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::LR(RankNode<Key, Value> *node) {
-    node->left_son = RR(node->left_son);
-    return LL(node);
-}
-
-// Preforms the rotation needed
-template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::rotate(RankNode<Key, Value> *node) {
-    int bf = BF(node);
+RankNode<Key, Value> *RankTree<Key, Value>::Rotate(RankNode<Key, Value> *node) {
+    int bf = CalcBalanceFactor(node);
     if (bf >= 2) {
-        if (BF(node->left_son) >= 0) {
-            return LL(node);
+        if (CalcBalanceFactor(node->m_left_son) >= 0) {
+            return LeftLeft(node);
         } else {
-            return LR(node);
+            return LeftRight(node);
         }
     } else if (bf <= -2) {
-        if (BF(node->right_son) > 0) {
-            return RL(node);
+        if (CalcBalanceFactor(node->m_right_son) > 0) {
+            return RightLeft(node);
         } else {
-            return RR(node);
+            return RightRight(node);
         }
     } else return node;
+}
+
+template<class Key, class Value>
+RankNode<Key, Value> *RankTree<Key, Value>::findClosestSmallerKey(Key target) {
+    Key result = -1;
+    RankNode<Key, Value> * curRoot = root;
+    while (curRoot) {
+        if (curRoot->m_key < target) {
+            result = result > curRoot->m_key ? result : curRoot->m_key;
+            curRoot = curRoot->m_right_son;
+        } else {
+            curRoot = curRoot->m_left_son;
+        }
+    }
+    return FindByKey(result);
 }
 
 template<class Key, class Value>
@@ -311,33 +383,31 @@ StatusType RankTree<Key, Value>::insert(Key key, Value value) {
 }
 
 
-
-
 template<class Key, class Value>
 void RankTree<Key, Value>::addToExtra(Key key, double  amount){
     bool isRightSequnce = false;
     RankNode<Key, Value> * curRoot = root;
     while (curRoot != NULL) {
-        if (key > curRoot->key){
+        if (key > curRoot->m_key){
             if (isRightSequnce == false){
                 curRoot->extra += amount;
                 isRightSequnce = true;
             }
-            curRoot = curRoot->right_son;
+            curRoot = curRoot->m_right_son;
         }
-        else if (key < curRoot->key){
+        else if (key < curRoot->m_key){
             if (isRightSequnce == true){
                 curRoot->extra -= amount;
                 isRightSequnce = false;
             }
-            curRoot = curRoot->left_son;
+            curRoot = curRoot->m_left_son;
             }
         else {
             if (isRightSequnce == false){
                 curRoot->extra += amount;
             }
-            if (curRoot->right_son){
-                curRoot->right_son->extra -= amount;
+            if (curRoot->m_right_son){
+                curRoot->m_right_son->extra -= amount;
             }
             return; 
         }
@@ -351,13 +421,13 @@ double RankTree<Key, Value>::sumExtra(Key key){
     RankNode<Key, Value> * curRoot = root;
     double sum = 0;
     while (curRoot != NULL) {
-        if (key > curRoot->key){
+        if (key > curRoot->m_key){
             sum += curRoot->extra;
-            curRoot = curRoot->right_son;
+            curRoot = curRoot->m_right_son;
         }
-        else if (key < curRoot->key){
+        else if (key < curRoot->m_key){
             sum += curRoot->extra;
-            curRoot = curRoot->left_son;
+            curRoot = curRoot->m_left_son;
         }
         else {
             sum += curRoot->privateExtra;
@@ -368,84 +438,31 @@ double RankTree<Key, Value>::sumExtra(Key key){
     return 0;
 }
 
-template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::findClosestSmallerKey(Key target) {
-    Key result = -1;
-    RankNode<Key, Value> * curRoot = root;
-    while (curRoot) {
-        if (curRoot->key < target) {
-            result = result > curRoot->key ? result : curRoot->key;
-            curRoot = curRoot->right_son;
-        } else {
-            curRoot = curRoot->left_son;
-        }
-    }
-    return find(result);
-}
+
 
 template<class Key, class Value>
 RankNode<Key, Value> *RankTree<Key, Value>::NextInOrder(RankNode<Key, Value> *node) {
     if (!node) {
         return nullptr;
     }
-    if (node->right_son) {
-        return findMinNode(node->right_son);
+    if (node->m_right_son) {
+        return findMinNode(node->m_right_son);
     }
-    RankNode<Key, Value> *parent = node->parent;
-    while (parent != nullptr && node == parent->right_son) {
+    RankNode<Key, Value> *parent = node->m_parent;
+    while (parent != nullptr && node == parent->m_right_son) {
         node = parent;
-        parent = parent->parent;
+        parent = parent->m_parent;
     }
     return parent;
 }
 
-template<class Key, class Value>
-StatusType
-RankTree<Key, Value>::insertNode(RankNode<Key, Value> *rootNode, RankNode<Key, Value> *newParent,
-                                 RankNode<Key, Value> *toInsert) {
-    if (!rootNode) {
-        rootNode = toInsert;
-        rootNode->parent = newParent;
-        if (newParent) {
-            if (newParent->key > toInsert->key) {
-                newParent->left_son = rootNode;
-            } else newParent->right_son = rootNode;
-        }
-        size++;
-    } else if (rootNode->key == toInsert->key) {
-        return StatusType::FAILURE;
 
-    } else if (rootNode->key > toInsert->key) {
-        insertNode(rootNode->left_son, rootNode, toInsert);
-    } else if (rootNode->key < toInsert->key) {
-        insertNode(rootNode->right_son, rootNode, toInsert);
-    }
-    int rHeight = 0, lHeight = 0;
-    int weight = 1;
-    if (newParent) {
-        if (newParent->right_son) {
-            rHeight = newParent->right_son->height;
-            weight += newParent->right_son->weight;
-        }
-        if (newParent->left_son) {
-            lHeight = newParent->left_son->height;
-            weight += newParent->left_son->weight;
-        }
-        if (newParent->left_son || newParent->right_son)
-            newParent->height = 1 + std::max(rHeight, lHeight);
-        else
-            newParent->height = 0;
-        newParent->weight = weight;
-        this->rotate(newParent);
-    }
-    return StatusType::SUCCESS;
-}
 
 template<class Key, class Value>
 RankNode<Key, Value> *findMinNode(RankNode<Key, Value> *root) {
     RankNode<Key, Value> *node = root;
-    while (node->left_son != nullptr) {
-        node = node->left_son;
+    while (node->m_left_son != nullptr) {
+        node = node->m_left_son;
     }
     return node;
 }
@@ -453,31 +470,31 @@ RankNode<Key, Value> *findMinNode(RankNode<Key, Value> *root) {
 template<class Key, class Value>
 RankNode<Key, Value> *findMaxNode(RankNode<Key, Value> *root) {
     RankNode<Key, Value> *node = root;
-    while (node->right_son != nullptr) {
-        node = node->right_son;
+    while (node->m_right_son != nullptr) {
+        node = node->m_right_son;
     }
     return node;
 }
 
 template<class Key, class Value>
-StatusType RankTree<Key, Value>::remove(Key key) {
-    RankNode<Key, Value> *node = find(key);
+StatusType RankTree<Key, Value>::Delete(Key key) {
+    RankNode<Key, Value> *node = FindByKey(key);
     if (!node)
         return StatusType::FAILURE;
-    RankNode<Key, Value> *new_node = deleteNode(node, node->parent);
-    updateTreeBalance(new_node);
+    RankNode<Key, Value> *new_node = DeleteNode(node, node->parent);
+    UpdateBalance(new_node);
     return StatusType::SUCCESS;
 }
 
 template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::deleteNode(RankNode<Key, Value> *node, RankNode<Key, Value> *nodeParent) {
+RankNode<Key, Value> *RankTree<Key, Value>::DeleteNode(RankNode<Key, Value> *node, RankNode<Key, Value> *nodeParent) {
     //if node is a leaf
-    if (!node->left_son && !node->right_son) {
+    if (!node->m_left_son && !node->m_right_son) {
         if (nodeParent) {
-            if (nodeParent->left_son == node) {
-                nodeParent->left_son = nullptr;
+            if (nodeParent->m_left_son == node) {
+                nodeParent->m_left_son = nullptr;
             } else {
-                nodeParent->right_son = nullptr;
+                nodeParent->m_right_son = nullptr;
             }
         }
         if (node == root)
@@ -487,51 +504,51 @@ RankNode<Key, Value> *RankTree<Key, Value>::deleteNode(RankNode<Key, Value> *nod
         return nodeParent;
     }
         // if node has only right son
-    else if (!node->left_son && node->right_son) {
+    else if (!node->m_left_son && node->m_right_son) {
         if (nodeParent) {
-            if (nodeParent->left_son == node) {
-                nodeParent->left_son = node->right_son;
+            if (nodeParent->m_left_son == node) {
+                nodeParent->m_left_son = node->m_right_son;
             } else {
-                nodeParent->right_son = node->right_son;
+                nodeParent->m_right_son = node->m_right_son;
             }
         }
-        node->right_son->parent = nodeParent;
+        node->m_right_son->m_parent = nodeParent;
         if (node == root)
-            root = node->right_son;
+            root = node->m_right_son;
         delete node;
         size--;
         return nodeParent;
     }
         // if node has only left son
-    else if (node->left_son && !node->right_son) {
+    else if (node->m_left_son && !node->m_right_son) {
         if (nodeParent) {
-            if (nodeParent->left_son == node) {
-                nodeParent->left_son = node->left_son;
+            if (nodeParent->m_left_son == node) {
+                nodeParent->m_left_son = node->m_left_son;
             } else {
-                nodeParent->right_son = node->left_son;
+                nodeParent->m_right_son = node->m_left_son;
             }
         }
-        node->left_son->parent = nodeParent;
+        node->m_left_son->m_parent = nodeParent;
         if (node == root)
-            root = node->left_son;
+            root = node->m_left_son;
         delete node;
         size--;
         return nodeParent;
     }
         // if node has both sons
     else {
-        RankNode<Key, Value> *maxNode = findMaxNode(node->left_son);
-        RankNode<Key, Value> *maxNodeParent = maxNode->parent;
+        RankNode<Key, Value> *maxNode = findMaxNode(node->m_left_son);
+        RankNode<Key, Value> *maxNodeParent = maxNode->m_parent;
         //if maxNode is a direct son of node
-        if (node->left_son == maxNode) {
-            node->right_son->parent = maxNode;
-            maxNode->right_son = node->right_son;
-            maxNode->parent = nodeParent;
+        if (node->m_left_son == maxNode) {
+            node->m_right_son->m_parent = maxNode;
+            maxNode->m_right_son = node->m_right_son;
+            maxNode->m_parent = nodeParent;
             if (nodeParent) {
-                if (nodeParent->left_son == node) {
-                    nodeParent->left_son = maxNode;
+                if (nodeParent->m_left_son == node) {
+                    nodeParent->m_left_son = maxNode;
                 } else {
-                    nodeParent->right_son = maxNode;
+                    nodeParent->m_right_son = maxNode;
                 }
             }
             if (node == root)
@@ -541,32 +558,32 @@ RankNode<Key, Value> *RankTree<Key, Value>::deleteNode(RankNode<Key, Value> *nod
             return maxNode;
             //if maxNode isn't a direct son of node
         } else {
-            node->right_son->parent = maxNode;
-            node->left_son->parent = maxNode;
+            node->m_right_son->m_parent = maxNode;
+            node->m_left_son->m_parent = maxNode;
             //if maxNode has a left son
-            if (maxNode->left_son) {
-                if (maxNodeParent->left_son == maxNode) {
-                    maxNodeParent->left_son = maxNode->left_son;
+            if (maxNode->m_left_son) {
+                if (maxNodeParent->m_left_son == maxNode) {
+                    maxNodeParent->m_left_son = maxNode->m_left_son;
                 } else {
-                    maxNodeParent->right_son = maxNode->left_son;
+                    maxNodeParent->m_right_son = maxNode->m_left_son;
                 }
-                maxNode->left_son->parent = maxNodeParent;
+                maxNode->m_left_son->m_parent = maxNodeParent;
                 //if maxNode is a leaf
             } else {
-                if (maxNodeParent->left_son == maxNode) {
-                    maxNodeParent->left_son = nullptr;
+                if (maxNodeParent->m_left_son == maxNode) {
+                    maxNodeParent->m_left_son = nullptr;
                 } else {
-                    maxNodeParent->right_son = nullptr;
+                    maxNodeParent->m_right_son = nullptr;
                 }
             }
-            maxNode->parent = nodeParent;
-            maxNode->right_son = node->right_son;
-            maxNode->left_son = node->left_son;
+            maxNode->m_parent = nodeParent;
+            maxNode->m_right_son = node->m_right_son;
+            maxNode->m_left_son = node->m_left_son;
             if (nodeParent) {
-                if (nodeParent->left_son == node) {
-                    nodeParent->left_son = maxNode;
+                if (nodeParent->m_left_son == node) {
+                    nodeParent->m_left_son = maxNode;
                 } else {
-                    nodeParent->right_son = maxNode;
+                    nodeParent->m_right_son = maxNode;
                 }
             }
             if (node == root)
@@ -579,47 +596,30 @@ RankNode<Key, Value> *RankTree<Key, Value>::deleteNode(RankNode<Key, Value> *nod
 }
 
 template<class Key, class Value>
-void RankTree<Key, Value>::updateTreeBalance(RankNode<Key, Value> *node) {
+void RankTree<Key, Value>::UpdateBalance(RankNode<Key, Value> *node) {
     if (!node)
         return;
     int rHeight = 0, lHeight = 0;
     int weight = 1;
-    if (node->right_son) {
-        rHeight = node->right_son->height;
-        weight += node->right_son->weight;
+    if (node->m_right_son) {
+        rHeight = node->m_right_son->m_height;
+        weight += node->m_right_son->m_weight;
     }
-    if (node->left_son) {
-        lHeight = node->left_son->height;
-        weight += node->left_son->weight;
+    if (node->m_left_son) {
+        lHeight = node->m_left_son->m_height;
+        weight += node->m_left_son->m_weight;
     }
-    if (node->left_son || node->right_son)
-        node->height = 1 + std::max(rHeight, lHeight);
+    if (node->m_left_son || node->m_right_son)
+        node->m_height = 1 + std::max(rHeight, lHeight);
     else
-        node->height = 0;
-    node->weight = weight;
-    this->rotate(node);
-    updateTreeBalance(node->parent);
+        node->m_height = 0;
+    node->m_weight = weight;
+    this->Rotate(node);
+    UpdateBalance(node->m_parent);
 }
 
 
-template<class Key, class Value>
-RankNode<Key, Value> *RankTree<Key, Value>::find(Key key) {
-    return findNode(root, key);
-}
 
-
-template<class Key, class Value>
-RankNode<Key, Value> *findNode(RankNode<Key, Value> *rootNode, Key key) {
-    if (!rootNode) {
-        return nullptr;
-    } else if (rootNode->key == key) {
-        return rootNode;
-    } else if (rootNode->key > key)
-        return findNode(rootNode->left_son, key);
-    else {
-        return findNode(rootNode->right_son, key);
-    }
-}
 
 
 template<class Key, class Value>
@@ -629,11 +629,11 @@ int BalanceFactor(RankNode<Key, Value> *node) {
     }
     int Rheight = -1;
     int Lheight = -1;
-    if (node->right_son != nullptr) {
-        Rheight = node->right_son->height;
+    if (node->m_right_son != nullptr) {
+        Rheight = node->m_right_son->m_height;
     }
-    if (node->left_son != nullptr) {
-        Lheight = node->left_son->height;
+    if (node->m_left_son != nullptr) {
+        Lheight = node->m_left_son->m_height;
     }
     return Lheight - Rheight;
 }

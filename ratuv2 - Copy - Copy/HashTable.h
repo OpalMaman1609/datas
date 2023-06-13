@@ -1,57 +1,52 @@
-#ifndef HASH_TABLE_H
-#define HASH_TABLE_H
+#ifndef HASHTABLE_H
+#define HASHTABLE_H
 
 #include "utilesWet2.h"
 #include <iostream>
 #include "AvlTree.h"
 
-// Hashtable with chain hashing based on an AVL tree with load factor of 2
+/*Chain hashing hash table, LF is 2*/
 
-
-// ----Hash Table----
 template<class Value>
 class HashTable {
 
 public:
-    int size;
-    int Values_amount;
-    int load_factor;
+    int m_size;
+    int m_valueSize;
+    int m_loadFactor;
     AvlTree<int, Value> *array;
 
     explicit HashTable();
 
     ~HashTable();
 
-    AvlNode<int, Value> *find_HT(int key);
+    void changeSize(int toBigger);
 
-    AvlNode<int, Value> *operator[](int place);
+    StatusType insertH(int id, Value value);
 
-    const AvlNode<int, Value> *operator[](int place) const;
+    AvlNode<int, Value> *findH(int key);
 
-    void clear();
+    AvlNode<int, Value> *operator[](int index);
 
-    void resize(int to_change);
+    const AvlNode<int, Value> *operator[](int index) const;
 
-    StatusType insert_HT(int id, Value value);
 
-    bool remove_HT(int id);
 };
 
 
-// Constructor
 template<class Value>
-HashTable<Value>::HashTable()
-        : size(10), Values_amount(0), load_factor(2)  {
-            array = new AvlTree<int, Value>[size]();
-        }
+HashTable<Value>::HashTable(): m_size(10), m_valueSize(0), m_loadFactor(2)  
+    {
+    array = new AvlTree<int, Value>[m_size]();
+    }
 
-// Dtor
+
 template<class Value>
 HashTable<Value>::~HashTable() {
     AvlNode<int, Value> *current;
-    for (int i = 0; i < this->size; i++) {
-            if (array[i].m_root != nullptr) {
-                current = findMinNode(array[i].m_root);
+    for (int i = 0; i < this->m_size; i++) {
+        if (array[i].m_root != nullptr) {
+            current = findMinNode(array[i].m_root);
                 while (current != nullptr) {
                     delete current->m_value;
                     current = array[i].NextInOrder(current);
@@ -62,100 +57,70 @@ HashTable<Value>::~HashTable() {
 }
 
 template<class Value>
-AvlNode<int, Value> *HashTable<Value>::find_HT(int key) {
-    if (array[key % size].FindByKey(key) == nullptr) {
+AvlNode<int, Value> *HashTable<Value>::findH(int key) {
+    if (array[key % m_size].FindByKey(key) == nullptr) {
         return nullptr;
     } else {
-        return array[key % size].FindByKey(key);
+        return array[key % m_size].FindByKey(key);
     }
 }
 
 template<class Value>
-AvlNode<int, Value> *HashTable<Value>::operator[](int place) {
-    if (place >= size || place < 0) {
+AvlNode<int, Value> *HashTable<Value>::operator[](int index) {
+    if (index >= m_size || index < 0) {
         return nullptr;
     }
-    return array[place];
+    return array[index];
 }
 
 template<class Value>
-const AvlNode<int, Value> *HashTable<Value>::operator[](int place) const {
-    if (place >= size || place < 0) {
+const AvlNode<int, Value> *HashTable<Value>::operator[](int index) const {
+    if (index >= m_size || index < 0) {
         return nullptr;
     }
-    return array[place];
+    return array[index];
 }
 
-template<class Value>
-void HashTable<Value>::clear() {
-    delete[] array;
-}
 
 template<class Value>
-void HashTable<Value>::resize(int to_change) {
-    if (to_change == 1) {
-        size *= 2;
+void HashTable<Value>::changeSize(int toBigger) {
+    if (toBigger == 1) {
+        m_size *= 2;
     } else {
-        size /= 2;
+        m_size /= 2;
     }
 }
 
 template<class Value>
-StatusType HashTable<Value>::insert_HT(int id, Value value) {
-    if (this->find_HT(id) != nullptr) {
+StatusType HashTable<Value>::insertH(int id, Value value) {
+    if (this->findH(id) != nullptr) {
         return StatusType::ALREADY_EXISTS;
     }
-    if ((this->load_factor * this->size) < this->Values_amount) {
+    if ((this->m_loadFactor * this->m_size) < this->m_valueSize) {
         AvlNode<int, Value> *current;
         //try {
-        auto bigger_array = new AvlTree<int, Value>[2 * size]();
+        auto bigArray = new AvlTree<int, Value>[2 * m_size]();
          //} catch (std::bad_alloc &e) {
          //   return StatusType::ALLOCATION_ERROR;
          // }
-        for (int i = 0; i < this->size; i++) {
+        for (int i = 0; i < this->m_size; i++) {
             if (array[i].m_root != nullptr) {
                 current = findMinNode(array[i].m_root);
                 while (current != nullptr) {
-                    bigger_array[current->m_key % (2 * this->size)].Insert(current->m_key, current->m_value);
+                    bigArray[current->m_key % (2 * this->m_size)].Insert(current->m_key, current->m_value);
                     current = array[i].NextInOrder(current);
                 }
             }
         }
-        this->clear();
-        array = bigger_array;
-        this->resize(1);
+        delete[] array;
+        array = bigArray;
+        this->changeSize(1);
     }
-    array[id % this->size].Insert(id, value);
-    this->Values_amount++;
+    array[id % this->m_size].Insert(id, value);
+    this->m_valueSize++;
     return StatusType::SUCCESS;
 }
 
 
-template<class Value>
-bool HashTable<Value>::remove_HT(int id) {
-    if (this->find_HT(id) == nullptr) {
-        return false;
-    }
-    if ((this->load_factor * this->Values_amount) < this->size) {
-        AvlNode<int, Value> *current;
-        auto smaller_array = new AvlTree<int, Value>[this->size / 2]();
-        for (int i = 0; i < this->size; i++) {
-            if (array[i].m_root != nullptr) {
-                current = findMinNode(array[i].m_root);
-                while (current != nullptr) {
-                    smaller_array[current->m_key % (this->size / 2)].Insert(current->id, current->value);
-                    current = array[i].NextInOrder(current);
-                }
-            }
-        }
-        this->clear();
-        array = smaller_array;
-        this->resize(2);
-    }
-    array[id % this->size].Delete(id);
-    this->Values_amount--;
-    return true;
-}
 
-
-#endif /* HASH_TABLE_H */
+#endif /* HASHTABLE_H */

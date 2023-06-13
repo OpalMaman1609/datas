@@ -17,7 +17,7 @@ StatusType RecordsCompany::newMonth(int *records_stocks, int number_of_records){
     while (current != nullptr) {
         current->extra = 0;
         current->privateExtra=0;
-        current->value->deleteExpenses();
+        current->m_value->deleteExpenses();
         current = m_members.NextInOrder(current);
         }
     return StatusType::SUCCESS;
@@ -28,19 +28,18 @@ StatusType RecordsCompany::addCostumer(int c_id, int phone){
         return StatusType::INVALID_INPUT;
     }
     Costumer *toAdd = new Costumer(c_id,phone);
-    StatusType status =  m_costumers.insert_HT(c_id,toAdd);
+    StatusType status =  m_costumers.insertH(c_id,toAdd);
     if (status == StatusType::ALREADY_EXISTS){
         delete toAdd;
     }
     return status;
-    //delete toAdd;
 }
 
 Output_t<int> RecordsCompany::getPhone(int c_id){
      if (c_id < 0 ){
         return Output_t<int>(StatusType::INVALID_INPUT);
     }
-    AvlNode<int, Costumer*> *findCostumer = m_costumers.find_HT(c_id);
+    AvlNode<int, Costumer*> *findCostumer = m_costumers.findH(c_id);
     if (!findCostumer){
         return Output_t<int>(StatusType::DOESNT_EXISTS);
     }
@@ -51,18 +50,18 @@ StatusType RecordsCompany::makeMember(int c_id){
      if (c_id < 0){
         return StatusType::INVALID_INPUT;
     }
-    AvlNode<int, Costumer*> *findCostumer = m_costumers.find_HT(c_id);
+    AvlNode<int, Costumer*> *findCostumer = m_costumers.findH(c_id);
     if (!findCostumer){
         return StatusType::DOESNT_EXISTS;
     }
-    RankNode<int, Costumer*> *findMember = m_members.find(c_id);
+    RankNode<int, Costumer*> *findMember = m_members.FindByKey(c_id);
     if (findMember){
         return StatusType::ALREADY_EXISTS;
     }
     findCostumer->m_value->changeToMember();
     StatusType status = m_members.insert(c_id, findCostumer->m_value);
     if (status == StatusType::SUCCESS){
-        RankNode<int, Costumer*> *member = m_members.find(c_id);
+        RankNode<int, Costumer*> *member = m_members.FindByKey(c_id);
         member->privateExtra -= m_members.sumExtra(c_id);
     }
     return status;
@@ -73,7 +72,7 @@ Output_t<bool> RecordsCompany::isMember(int c_id){
     if (c_id < 0 ){
         return Output_t<bool>(StatusType::INVALID_INPUT);
     }
-    AvlNode<int, Costumer*> *findCostumer = m_costumers.find_HT(c_id);
+    AvlNode<int, Costumer*> *findCostumer = m_costumers.findH(c_id);
     if (!findCostumer){
         return Output_t<bool>(StatusType::DOESNT_EXISTS);
     }
@@ -85,16 +84,16 @@ StatusType RecordsCompany::buyRecord(int c_id, int r_id) {
         return StatusType::INVALID_INPUT;
     }
 
-    if (r_id >= m_records.getSize() || m_costumers.find_HT(c_id) == nullptr) {
+    if (r_id >= m_records.getSize() || m_costumers.findH(c_id) == nullptr) {
         return StatusType::DOESNT_EXISTS;
     }
 
     UnionFindNode& record = m_records.getElement(r_id);
     int recordPrice = 100 + record.getSales();
     
-    RankNode<int, Costumer*>* member = m_members.find(c_id);
+    RankNode<int, Costumer*>* member = m_members.FindByKey(c_id);
     if (member != nullptr) {
-        member->value->addToExpenses(recordPrice);
+        member->m_value->addToExpenses(recordPrice);
     }
 
     record.incrementSales();
@@ -143,12 +142,12 @@ StatusType RecordsCompany::addPrize(int c_id1, int c_id2, double  amount){
         }
         RankNode<int, Costumer*> *memberLeft = m_members.findClosestSmallerKey(c_id1);
         if (memberLeft){
-            m_members.addToExtra (memberLeft->key, (-amount));
+            m_members.addToExtra (memberLeft->m_key, (-amount));
             //std::cout << m_members.findClosestSmallerKey(c_id1)->key<< std::endl;
         }
         RankNode<int, Costumer*> *memberRight = m_members.findClosestSmallerKey(c_id2);
         if (memberRight){
-            m_members.addToExtra (memberRight->key, amount);
+            m_members.addToExtra (memberRight->m_key, amount);
             //std::cout << m_members.findClosestSmallerKey(c_id2)->key;
         }
         return StatusType::SUCCESS;
@@ -158,11 +157,11 @@ Output_t<double> RecordsCompany::getExpenses(int c_id){
     if (c_id < 0 ){
         return Output_t<double>(StatusType::INVALID_INPUT);
     }
-    RankNode<int, Costumer*> *member = m_members.find(c_id);
+    RankNode<int, Costumer*> *member = m_members.FindByKey(c_id);
     if (!member){
         return Output_t<double>(StatusType::DOESNT_EXISTS);
     }
-    double expenses = member->value->getExpenses() - m_members.sumExtra(c_id);
+    double expenses = member->m_value->getExpenses() - m_members.sumExtra(c_id);
     return Output_t<double>(expenses);
 }
 
